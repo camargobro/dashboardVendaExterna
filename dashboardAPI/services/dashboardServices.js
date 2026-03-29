@@ -69,9 +69,13 @@ export function verRanking() {
         (a, b) => a.mediaVendas - b.mediaVendas
     )[0];
 
+    const ordenado = resultado.sort(
+    (a, b) => b.mediaVendas - a.mediaVendas
+    );
     return {
         melhorVendas,
         melhorLeads,
-        piorPonto
+        piorPonto,
+        ordenado
     };
 }
