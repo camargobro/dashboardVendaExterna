@@ -1,5 +1,7 @@
 
 import { getPontos, postPonto } from '../model/modelPonto.js';
+import { pontoDuplicado } from '../regrasNegocios/regrasNegociosPontos.js';
+
 export async function buscarPontos(req, res) {
     try {
         const pontos = await getPontos();
@@ -16,6 +18,12 @@ export async function criarPontos(req, res) {
 
         if (!nome || !endereco || !bairro || !cidade || !tipo) {
             return res.status(400).json({ error: "Todos os campos são obrigatórios" });
+        }
+
+        // Validar se ponto já existe
+        const duplicado = await pontoDuplicado({ nome, endereco });
+        if (duplicado) {
+            return res.status(409).json({ error: "Ponto com esse nome e endereço já existe" });
         }
 
         const novoPonto = await postPonto({ nome, endereco, bairro, cidade, tipo });

@@ -1,5 +1,6 @@
 
 import { getAcoes, postAcoes } from '../model/modelAcao.js';
+import { verificaIdPonto } from '../regrasNegocios/regrasNegociosAcoes.js';
 
 export async function buscarAcoes(req, res) {
     try {
@@ -17,6 +18,13 @@ export async function criarAcoes(req, res) {
         if(!pontoId || !data || leads === undefined || vendas === undefined){
             return res.status(400).json({ error: "Todos os campos são obrigatórios" });
         }
+
+        // Validar se pontoId existe
+        const pontoExiste = await verificaIdPonto(pontoId);
+        if (!pontoExiste) {
+            return res.status(404).json({ error: "Ponto com esse ID não existe" });
+        }
+
         const novaAcao = await postAcoes({ pontoId, data, leads, vendas });
         res.status(201).json(novaAcao);
     } catch(error){

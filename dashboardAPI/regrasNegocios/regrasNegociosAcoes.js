@@ -1,6 +1,12 @@
 
-import db from '../db.js';
+import { Pontos } from '../model/modelPonto.js';
 
-export function verificaIdPonto(pontoId) {
-    return db.some(p => p._id === pontoId);
+export async function verificaIdPonto(pontoId) {
+    try {
+        const ponto = await Pontos.findById(pontoId);
+        return ponto !== null;
+    } catch (error) {
+        console.error('Erro ao verificar ID do ponto:', error);
+        return false;
+    }
 }
