@@ -1,8 +1,9 @@
 import express from 'express';
-import { getDashboard, getRanking } from '../controller/dashboardController.js';
-var router = express.Router();
+import { verDashboard, verRanking } from '../controller/dashboardController.js';
 
-/* GET users listing. */
-router.get('/', getDashboard);
-router.get('/ranking', getRanking);
+const router = express.Router();
+
+router.get('/', verDashboard);
+router.get('/ranking', verRanking);
+
 export default router;

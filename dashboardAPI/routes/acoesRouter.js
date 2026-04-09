@@ -1,8 +1,8 @@
 import express from 'express';
-import { getAcoes, postAcoes } from '../controller/acoesController.js';
+import { buscarAcoes, criarAcoes } from '../controller/acoesController.js';
 var router = express.Router();
 
 /* GET users listing. */
-router.get('/', getAcoes);
-router.post('/', postAcoes);
+router.get('/', buscarAcoes);
+router.post('/', criarAcoes);
 export default router;

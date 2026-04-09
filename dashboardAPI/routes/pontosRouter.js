@@ -1,9 +1,9 @@
 import express from 'express';
-import { getPontos, postPontos } from '../controller/pontosController.js';
+import { criarPontos, buscarPontos } from '../controller/pontosController.js';
 
 var router = express.Router();
 
 /* GET users listing. */
-router.get('/', getPontos);
-router.post('/', postPontos);
+router.get('/', buscarPontos);
+router.post('/', criarPontos);
 export default router;

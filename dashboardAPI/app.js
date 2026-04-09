@@ -3,14 +3,14 @@ import express from 'express';
 import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
+import conectaDB from './dbConnect.js';
 
 import pontosRouter from './routes/pontosRouter.js';
 import acoesRouter from './routes/acoesRouter.js';
 import dashboardRouter from './routes/dashboardRouter.js';
 var app = express();
 
-
-
+conectaDB();
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

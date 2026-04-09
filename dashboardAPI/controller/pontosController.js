@@ -1,30 +1,32 @@
-import db from '../db.js';
 
-import { mostrarPontos, criarPonto } from '../services/pontosServices.js';
-export async function getPontos(req, res) {
-    try{
-
-        await res.status(200).json(mostrarPontos());
-    }catch(error){
+import { getPontos, postPonto } from '../model/modelPonto.js';
+export async function buscarPontos(req, res) {
+    try {
+        const pontos = await getPontos();
+        res.status(200).json(pontos);
+    } catch (error) {
         console.error("Erro ao obter pontos:", error);
         res.status(500).json({ error: "Erro ao obter pontos" });
     }
 }
 
-export function postPontos(req, res) {
+export async function criarPontos(req, res) {
     try {
         const { nome, endereco, bairro, cidade, tipo } = req.body;
 
-        // 🔒 validação de entrada
         if (!nome || !endereco || !bairro || !cidade || !tipo) {
             return res.status(400).json({ error: "Todos os campos são obrigatórios" });
         }
 
-        const novoPonto = criarPonto({ nome, endereco, bairro, cidade, tipo });
+        const novoPonto = await postPonto({ nome, endereco, bairro, cidade, tipo });
+
+        if (!novoPonto) {
+            return res.status(400).json({ error: "Erro ao criar ponto" });
+        }
 
         return res.status(201).json(novoPonto);
-
     } catch (error) {
-        return res.status(400).json({ error: error.message });
+        console.error("Erro ao criar ponto:", error);
+        return res.status(500).json({ error: "Erro ao criar ponto" });
     }
 }
