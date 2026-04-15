@@ -4,6 +4,7 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import conectaDB from './dbConnect.js';
+import cors from 'cors';
 
 import pontosRouter from './routes/pontosRouter.js';
 import acoesRouter from './routes/acoesRouter.js';
@@ -15,6 +16,7 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(cors());
 
 app.use('/pontos', pontosRouter);
 app.use('/acoes', acoesRouter);
@@ -35,5 +37,6 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
 
 export default app;
