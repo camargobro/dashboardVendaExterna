@@ -1,43 +1,38 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
-      <q-toolbar>
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
-        />
-
-        <q-toolbar-title>
-          Quasar App
-        </q-toolbar-title>
-
-        <div>Quasar v{{ $q.version }}</div>
+    <q-header elevated class="bg-white text-primary">
+      <q-toolbar class="q-pl-md q-pr-md justify-center">
+        <div class="row items-center no-wrap q-gutter-x-md">
+          <q-btn
+            flat
+            round
+            dense
+            :color="isActive('/') ? 'primary' : 'grey-7'"
+            label="HOME"
+            class="q-mx-xs hover:shadow-3 hover:scale-110 transition-all"
+            @click="go('/')"
+          />
+          <q-btn
+            flat
+            round
+            dense
+            :color="isActive('/criar-acao') ? 'primary' : 'grey-7'"
+            label="REGISTRAR AÇÃO"
+            class="q-mx-xs hover:shadow-3 hover:scale-110 transition-all"
+            @click="go('/criar-acao')"
+          />
+          <q-btn
+            flat
+            round
+            dense
+            :color="isActive('/historico-acoes') ? 'primary' : 'grey-7'"
+            label="HISTÓRICO DE AÇÕES"
+            class="q-mx-xs hover:shadow-3 hover:scale-110 transition-all"
+            @click="go('/historico-acoes')"
+          />
+        </div>
       </q-toolbar>
     </q-header>
-
-    <q-drawer
-      v-model="leftDrawerOpen"
-      show-if-above
-      bordered
-    >
-      <q-list>
-        <q-item-label
-          header
-        >
-          Essential Links
-        </q-item-label>
-
-        <EssentialLink
-          v-for="link in linksList"
-          :key="link.title"
-          v-bind="link"
-        />
-      </q-list>
-    </q-drawer>
 
     <q-page-container>
       <router-view />
@@ -46,57 +41,24 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import EssentialLink from 'components/EssentialLink.vue'
+import { useRouter, useRoute } from 'vue-router'
 
-const linksList = [
-  {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
-  },
-  {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
-  },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
+const router = useRouter()
+const route = useRoute()
+
+function go (path) {
+  if (route.path !== path) {
+    router.push(path)
   }
-]
+}
 
-const leftDrawerOpen = ref(false)
-
-function toggleLeftDrawer () {
-  leftDrawerOpen.value = !leftDrawerOpen.value
+function isActive (path) {
+  return route.path === path
 }
 </script>
+
+<style scoped>
+.transition-all {
+  transition: all 0.3s ease;
+}
+</style>
