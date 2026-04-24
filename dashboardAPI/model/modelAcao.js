@@ -20,4 +20,7 @@ export async function getAcoes() {
   return await Acoes.find();
 }
 
+export async function deleteAcao(id) {
+  return await Acoes.findByIdAndDelete(id);
+}
 

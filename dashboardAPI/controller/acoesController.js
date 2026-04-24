@@ -1,5 +1,5 @@
 
-import { getAcoes, postAcoes } from '../model/modelAcao.js';
+import { getAcoes, postAcoes, deleteAcao } from '../model/modelAcao.js';
 import { verificaIdPonto } from '../regrasNegocios/regrasNegociosAcoes.js';
 
 export async function buscarAcoes(req, res) {
@@ -32,4 +32,17 @@ export async function criarAcoes(req, res) {
         res.status(500).json({ error: "Erro ao criar ação" });
     }
 }
-    
+
+export async function removerAcao(req, res) {
+    try {
+        const { id } = req.params;
+        const acaoRemovida = await deleteAcao(id);
+        if (!acaoRemovida) {
+            return res.status(404).json({ error: "Ação com esse ID não encontrada" });
+        }
+        res.status(200).json({ message: "Ação removida com sucesso" });
+    } catch (error) {
+        console.error("Erro ao remover ação:", error);
+        res.status(500).json({ error: "Erro ao remover ação" });
+    }
+}

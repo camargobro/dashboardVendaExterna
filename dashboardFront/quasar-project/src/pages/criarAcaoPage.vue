@@ -219,6 +219,18 @@
                     <div class="text-subtitle2 text-grey">Vendas</div>
                     <div>{{ acao.vendas }}</div>
                   </div>
+                 <div class="col-auto">
+  <div class="row justify-end full-height items-start">
+    <q-btn
+  flat
+  icon="delete"
+  label="Excluir"
+  color="grey-8"
+  @click="confirmarExclusao(acao._id)"
+  class="bg-grey-3 text-weight-medium"
+/>
+  </div>
+</div>
                 </div>
               </q-card-section>
             </q-card>
@@ -245,11 +257,13 @@ const novoPonto = ref({ nome: '', endereco: '', bairro: '', cidade: '', tipo: ''
 const isHistory = computed(() => route.path === '/historico-acoes');
 
 const pontosOptions = computed(() =>
-  pontos.value.map((ponto) => ({
-    label: `${ponto.nome} — ${ponto.endereco}`,
-    value: ponto._id,
-  }))
-);
+  [...pontos.value]
+    .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+    .map((ponto) => ({
+      label: `${ponto.nome} — ${ponto.endereco}`,
+      value: ponto._id,
+    }))
+)
 
 const acoesComNomes = computed(() =>
   [...acoes.value]
@@ -348,6 +362,38 @@ async function carregarAcoes() {
     console.error(error);
     $q.notify({ type: 'negative', message: 'Não foi possível carregar o histórico de ações.' });
   }
+}
+function confirmarExclusao(id) {
+  $q.dialog({
+    title: 'Confirmar exclusão',
+    message: 'Você tem certeza que deseja excluir esta ação?',
+    persistent: true,
+    ok: {
+      label: 'Excluir',
+      color: 'negative'
+    },
+    cancel: {
+      label: 'Cancelar',
+      flat: true
+    }
+  }).onOk(() => {
+    excluirAcao(id);
+  });
+}
+async function excluirAcao(id){
+    try {
+        const response = await fetch(`http://localhost:3000/acoes/${id}`, {
+        method: 'DELETE',
+        });
+        if (!response.ok) {
+        throw new Error('Falha ao excluir ação');
+        }
+        acoes.value = acoes.value.filter((a) => a._id !== id);
+        $q.notify({ type: 'positive', message: 'Ação excluída com sucesso.' });
+    } catch (error) {
+        console.error(error);
+        $q.notify({ type: 'negative', message: 'Não foi possível excluir a ação.' });
+    }
 }
 
 async function enviarAcao() {
