@@ -1,4 +1,3 @@
-```vue
 <template>
   <div class="bg-grey-2" style="min-height: 100vh; width: 100%">
     <div class="q-px-lg q-py-xl" style="max-width: 1500px; margin: 0 auto">
@@ -13,12 +12,17 @@
         </div>
       </div>
 
+      <!-- CARDS RESUMO -->
       <div class="row q-col-gutter-xl q-mb-xl justify-center">
 
         <div class="col-12 col-md-3">
           <q-card class="shadow-4 rounded-borders bg-white">
             <q-card-section class="text-center">
-              <q-icon name="visibility" size="36px" class="q-mb-sm text-primary" />
+              <q-icon
+                name="visibility"
+                size="36px"
+                class="q-mb-sm text-primary"
+              />
 
               <div class="text-subtitle2 text-grey">
                 Total de Ações
@@ -34,7 +38,11 @@
         <div class="col-12 col-md-3">
           <q-card class="shadow-4 rounded-borders bg-white">
             <q-card-section class="text-center">
-              <q-icon name="shopping_cart" size="36px" class="q-mb-sm text-positive" />
+              <q-icon
+                name="shopping_cart"
+                size="36px"
+                class="q-mb-sm text-positive"
+              />
 
               <div class="text-subtitle2 text-grey">
                 Total de Vendas
@@ -50,7 +58,11 @@
         <div class="col-12 col-md-3">
           <q-card class="shadow-4 rounded-borders bg-white">
             <q-card-section class="text-center">
-              <q-icon name="groups" size="36px" class="q-mb-sm text-info" />
+              <q-icon
+                name="groups"
+                size="36px"
+                class="q-mb-sm text-info"
+              />
 
               <div class="text-subtitle2 text-grey">
                 Total de Leads
@@ -65,13 +77,20 @@
 
       </div>
 
+      <!-- MELHOR E PIOR -->
       <div class="row q-col-gutter-lg q-mt-xl q-mb-xl">
 
+        <!-- MELHOR -->
         <div class="col-12 col-md-6">
-          <q-card class="shadow-4 rounded-borders bg-white border-positive">
+
+          <q-card class="shadow-4 rounded-borders bg-white">
 
             <q-card-section class="row items-center q-gutter-sm">
-              <q-icon name="emoji_events" color="positive" size="lg" />
+              <q-icon
+                name="emoji_events"
+                color="positive"
+                size="lg"
+              />
 
               <div class="text-h5 text-weight-bold">
                 Melhor ponto
@@ -84,26 +103,37 @@
 
                 <div class="row items-center q-gutter-md">
 
-                  <q-badge color="positive" rounded size="lg">
+                  <q-badge
+                    color="positive"
+                    rounded
+                    size="lg"
+                  >
                     Melhor
                   </q-badge>
 
                   <div>
+
                     <div class="text-h6 text-weight-bold">
                       {{ melhorVendas.nome || 'Carregando...' }}
                     </div>
 
-                    <div class="text-body1 text-grey">
-                      Score:
-                      {{ melhorVendas.mediaVendas ? (melhorVendas.mediaVendas * 10).toFixed(1) : '0.0' }}
+                    <div class="text-body2 text-grey-7">
+                      {{ melhorVendas.endereco || 'Endereço não informado' }}
                     </div>
+
                   </div>
 
                 </div>
 
                 <div class="text-right text-positive text-h6 text-weight-bold">
-                  {{ melhorVendas.mediaVendas ? melhorVendas.mediaVendas.toFixed(2) : '0.00' }}
+                  {{
+                    melhorVendas.mediaVendas
+                      ? melhorVendas.mediaVendas.toFixed(2)
+                      : '0.00'
+                  }}
+
                   <br>
+
                   <span class="text-body1 text-grey">
                     vendas/visita
                   </span>
@@ -123,7 +153,7 @@
                   icon="visibility"
                   :label="showDetalhesMelhor ? 'Ver menos' : 'Ver mais'"
                   @click="showDetalhesMelhor = !showDetalhesMelhor"
-                  class="hover:shadow-3 hover:scale-110 transition-all text-body1"
+                  class="transition-all"
                 />
 
               </div>
@@ -138,11 +168,18 @@
               >
 
                 <div class="row items-center q-mb-md">
-                  <q-icon name="insights" color="positive" size="28px" class="q-mr-sm" />
+
+                  <q-icon
+                    name="insights"
+                    color="positive"
+                    size="28px"
+                    class="q-mr-sm"
+                  />
 
                   <div class="text-subtitle1 text-weight-bold text-positive">
                     Detalhes do Melhor Ponto
                   </div>
+
                 </div>
 
                 <div class="row q-col-gutter-md">
@@ -154,7 +191,7 @@
                         Visitas
                       </div>
 
-                      <div class="text-h5 text-weight-bold text-dark">
+                      <div class="text-h5 text-weight-bold">
                         {{ melhorVendas.totalVisitas || 0 }}
                       </div>
 
@@ -193,11 +230,15 @@
                     <div class="bg-white q-pa-md rounded-borders shadow-1">
 
                       <div class="text-caption text-grey-7">
-                        Média de Leads
+                        Média de vendas
                       </div>
 
                       <div class="text-h5 text-weight-bold text-primary">
-                        {{ melhorVendas.mediaVendas ? melhorVendas.mediaVendas.toFixed(2) : '0.00' }}
+                        {{
+                          melhorVendas.mediaVendas
+                            ? melhorVendas.mediaVendas.toFixed(2)
+                            : '0.00'
+                        }}
                       </div>
 
                     </div>
@@ -210,15 +251,21 @@
             </q-card-section>
 
           </q-card>
+
         </div>
 
+        <!-- PIOR -->
         <div class="col-12 col-md-6">
 
-          <q-card class="shadow-4 rounded-borders bg-white border-negative">
+          <q-card class="shadow-4 rounded-borders bg-white">
 
             <q-card-section class="row items-center q-gutter-sm">
 
-              <q-icon name="close" color="negative" size="lg" />
+              <q-icon
+                name="close"
+                color="negative"
+                size="lg"
+              />
 
               <div class="text-h5 text-weight-bold">
                 Pior ponto
@@ -232,7 +279,11 @@
 
                 <div class="row items-center q-gutter-md">
 
-                  <q-badge color="negative" rounded size="lg">
+                  <q-badge
+                    color="negative"
+                    rounded
+                    size="lg"
+                  >
                     Pior
                   </q-badge>
 
@@ -242,9 +293,8 @@
                       {{ piorPonto.nome || 'Carregando...' }}
                     </div>
 
-                    <div class="text-body1 text-grey">
-                      Score:
-                      {{ piorPonto.mediaVendas ? (piorPonto.mediaVendas * 10).toFixed(1) : '0.0' }}
+                    <div class="text-body2 text-grey-7">
+                      {{ piorPonto.endereco || 'Endereço não informado' }}
                     </div>
 
                   </div>
@@ -252,13 +302,19 @@
                 </div>
 
                 <div class="text-right text-negative text-h6 text-weight-bold">
-                  {{ piorPonto.mediaVendas ? piorPonto.mediaVendas.toFixed(2) : '0.00' }}
+
+                  {{
+                    piorPonto.mediaVendas
+                      ? piorPonto.mediaVendas.toFixed(2)
+                      : '0.00'
+                  }}
 
                   <br>
 
                   <span class="text-body1 text-grey">
                     vendas/visita
                   </span>
+
                 </div>
 
               </div>
@@ -275,7 +331,7 @@
                   icon="visibility"
                   :label="showDetalhesPior ? 'Ver menos' : 'Ver mais'"
                   @click="showDetalhesPior = !showDetalhesPior"
-                  class="hover:shadow-3 hover:scale-110 transition-all text-body1"
+                  class="transition-all"
                 />
 
               </div>
@@ -291,7 +347,12 @@
 
                 <div class="row items-center q-mb-md">
 
-                  <q-icon name="warning" color="negative" size="28px" class="q-mr-sm" />
+                  <q-icon
+                    name="warning"
+                    color="negative"
+                    size="28px"
+                    class="q-mr-sm"
+                  />
 
                   <div class="text-subtitle1 text-weight-bold text-negative">
                     Detalhes do Pior Ponto
@@ -308,7 +369,7 @@
                         Visitas
                       </div>
 
-                      <div class="text-h5 text-weight-bold text-dark">
+                      <div class="text-h5 text-weight-bold">
                         {{ piorPonto.totalVisitas || 0 }}
                       </div>
 
@@ -347,11 +408,15 @@
                     <div class="bg-white q-pa-md rounded-borders shadow-1">
 
                       <div class="text-caption text-grey-7">
-                        Média de Leads
+                        Média de vendas
                       </div>
 
                       <div class="text-h5 text-weight-bold text-deep-orange">
-                        {{ piorPonto.mediaVendas ? piorPonto.mediaVendas.toFixed(2) : '0.00' }}
+                        {{
+                          piorPonto.mediaVendas
+                            ? piorPonto.mediaVendas.toFixed(2)
+                            : '0.00'
+                        }}
                       </div>
 
                     </div>
@@ -369,6 +434,7 @@
 
       </div>
 
+      <!-- RANKING -->
       <div class="q-mb-xl">
 
         <q-card class="shadow-3 rounded-borders q-mb-lg bg-white">
@@ -379,13 +445,7 @@
 
           <q-table
             :rows="ranking"
-            :columns="[
-              { name:'nome', label:'Nome do ponto', field:'nome' },
-              { name:'visitas', label:'Visitas', field:'visitas' },
-              { name:'mediaVendas', label:'Média vendas', field:'mediaVendas' },
-              { name:'mediaLeads', label:'Média leads', field:'mediaLeads' },
-              { name:'score', label:'Score', field:'score' }
-            ]"
+            :columns="columns"
             row-key="nome"
             flat
           >
@@ -398,7 +458,7 @@
 
                   <q-badge
                     v-if="props.row.pos <= 3"
-                    :color="['yellow','grey-5','brown'][props.row.pos-1]"
+                    :color="['yellow','grey-5','brown'][props.row.pos - 1]"
                     text-color="black"
                     rounded
                     size="lg"
@@ -410,6 +470,10 @@
 
                     <div class="text-h6 text-weight-bold">
                       {{ props.row.nome }}
+                    </div>
+
+                    <div class="text-body2 text-grey-7">
+                      {{ props.row.endereco }}
                     </div>
 
                     <div class="text-body1 text-grey">
@@ -440,11 +504,41 @@ import { ref, onMounted } from 'vue'
 const totalVendas = ref(0)
 const totalAcoes = ref(0)
 const totalLeads = ref(0)
+
 const ranking = ref([])
+
 const melhorVendas = ref({})
 const piorPonto = ref({})
+
 const showDetalhesMelhor = ref(false)
 const showDetalhesPior = ref(false)
+
+const columns = [
+  {
+    name: 'nome',
+    label: 'Ponto',
+    field: 'nome',
+    align: 'left'
+  },
+  {
+    name: 'visitas',
+    label: 'Visitas',
+    field: 'visitas',
+    align: 'center'
+  },
+  {
+    name: 'mediaVendas',
+    label: 'Média vendas',
+    field: 'mediaVendas',
+    align: 'center'
+  },
+  {
+    name: 'mediaLeads',
+    label: 'Média leads',
+    field: 'mediaLeads',
+    align: 'center'
+  }
+]
 
 async function buscarDados() {
   try {
@@ -469,16 +563,21 @@ async function buscarDados() {
 
       ranking.value = dataRanking.ordenado.map((item, index) => ({
         pos: index + 1,
+
         nome: item.nome,
+
+        endereco: item.endereco || 'Endereço não informado',
+
         visitas: item.totalVisitas,
+
         mediaVendas: Math.round(item.mediaVendas * 100) / 100,
-        mediaLeads: Math.round(item.mediaLeads * 100) / 100,
-        score: Math.round(item.mediaVendas * 10 * 100) / 100
+
+        mediaLeads: Math.round(item.mediaLeads * 100) / 100
       }))
 
       melhorVendas.value = dataRanking.melhorVendas
-      piorPonto.value = dataRanking.piorPonto
 
+      piorPonto.value = dataRanking.piorPonto
     }
 
   } catch (e) {
@@ -499,5 +598,8 @@ body {
 .transition-all {
   transition: all 0.3s ease;
 }
+
+.rounded-borders {
+  border-radius: 16px;
+}
 </style>
-```

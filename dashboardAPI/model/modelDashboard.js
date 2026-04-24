@@ -27,7 +27,7 @@ export async function getRanking() {
 
         const agrupado = {};
 
-        // 🔹 Agrupar ações por ponto
+        // Agrupar ações por ponto
         acoes.forEach(a => {
             const pontoIdStr = a.pontoId.toString();
 
@@ -44,28 +44,41 @@ export async function getRanking() {
             agrupado[pontoIdStr].totalLeads += a.leads;
         });
 
-        // 🔹 Transformar em array + calcular médias
+        // Transformar em array + calcular médias
         const resultado = Object.entries(agrupado).map(([pontoId, dados]) => {
-            const ponto = pontos.find(p => p._id.toString() === pontoId);
 
-            const mediaVendas = dados.totalVisitas === 0
-                ? 0
-                : dados.totalVendas / dados.totalVisitas;
+            const ponto = pontos.find(
+                p => p._id.toString() === pontoId
+            );
 
-            const mediaLeads = dados.totalVisitas === 0
-                ? 0
-                : dados.totalLeads / dados.totalVisitas;
+            const mediaVendas =
+                dados.totalVisitas === 0
+                    ? 0
+                    : dados.totalVendas / dados.totalVisitas;
+
+            const mediaLeads =
+                dados.totalVisitas === 0
+                    ? 0
+                    : dados.totalLeads / dados.totalVisitas;
 
             return {
                 pontoId,
-                nome: ponto?.nome || "Desconhecido",
+
+                nome: ponto?.nome || 'Desconhecido',
+
+                endereco: ponto?.endereco || 'Endereço não informado',
+
+                bairro: ponto?.bairro || '',
+
+                cidade: ponto?.cidade || '',
+
                 ...dados,
+
                 mediaVendas,
                 mediaLeads
             };
         });
 
-        // 🔥 Rankings
         const melhorVendas = [...resultado].sort(
             (a, b) => b.mediaVendas - a.mediaVendas
         )[0];
@@ -88,6 +101,7 @@ export async function getRanking() {
             piorPonto,
             ordenado
         };
+
     } catch (error) {
         console.error('Erro ao buscar ranking:', error);
         throw error;
