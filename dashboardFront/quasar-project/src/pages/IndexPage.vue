@@ -543,9 +543,9 @@ const columns = [
 async function buscarDados() {
   try {
 
-    const responseDashboard = await fetch('https://dashboardvendaexterna-1.onrender.com/dashboard')
+    const responseDashboard = await fetch('https://dashboardvendaexterna.onrender.com/dashboard')
 
-    const responseRanking = await fetch('https://dashboardvendaexterna-1.onrender.com/dashboard/ranking')
+    const responseRanking = await fetch('https://dashboardvendaexterna.onrender.com/dashboard/ranking')
 
     if (!responseDashboard.ok) {
       throw new Error('Erro ao buscar dados do dashboard')

@@ -306,7 +306,7 @@ async function salvarNovoPonto() {
   }
 
   try {
-    const response = await fetch('https://dashboardvendaexterna-1.onrender.com/pontos', {
+    const response = await fetch('https://dashboardvendaexterna.onrender.com/pontos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(novoPonto.value),
@@ -340,7 +340,7 @@ function acaoBackgroundClass(vendas) {
 
 async function carregarPontos() {
   try {
-    const response = await fetch('https://dashboardvendaexterna-1.onrender.com/pontos');
+    const response = await fetch('https://dashboardvendaexterna.onrender.com/pontos');
     if (!response.ok) {
       throw new Error('Falha ao carregar pontos');
     }
@@ -353,7 +353,7 @@ async function carregarPontos() {
 
 async function carregarAcoes() {
   try {
-    const response = await fetch('https://dashboardvendaexterna-1.onrender.com/acoes');
+    const response = await fetch('https://dashboardvendaexterna.onrender.com/acoes');
     if (!response.ok) {
       throw new Error('Falha ao carregar histórico');
     }
@@ -382,7 +382,7 @@ function confirmarExclusao(id) {
 }
 async function excluirAcao(id){
     try {
-        const response = await fetch(`https://dashboardvendaexterna-1.onrender.com/acoes/${id}`, {
+        const response = await fetch(`https://dashboardvendaexterna.onrender.com/acoes/${id}`, {
         method: 'DELETE',
         });
         if (!response.ok) {
@@ -409,7 +409,7 @@ async function enviarAcao() {
         throw new Error('Preencha todos os dados do novo ponto');
       }
 
-      const pontoResponse = await fetch('https://dashboardvendaexterna-1.onrender.com/pontos', {
+      const pontoResponse = await fetch('https://dashboardvendaexterna.onrender.com/pontos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(novoPonto.value),
@@ -433,7 +433,7 @@ async function enviarAcao() {
       vendas: Number(form.value.vendas),
     };
 
-    const response = await fetch('https://dashboardvendaexterna-1.onrender.com/acoes', {
+    const response = await fetch('https://dashboardvendaexterna.onrender.com/acoes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
