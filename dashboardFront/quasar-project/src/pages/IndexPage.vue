@@ -439,8 +439,15 @@
 
         <q-card class="shadow-3 rounded-borders q-mb-lg bg-white">
 
-          <q-card-section class="text-h5 text-weight-bold">
-            Ranking de Performance
+          <q-card-section class="row items-center justify-between">
+            <div class="text-h5 text-weight-bold">Ranking de Performance</div>
+            <q-btn
+              flat
+              color="primary"
+              icon="download"
+              label="Exportar"
+              @click="baixarRanking"
+            />
           </q-card-section>
 
           <q-table
@@ -588,6 +595,26 @@ async function buscarDados() {
 onMounted(() => {
   buscarDados()
 })
+
+async function baixarRanking() {
+  try {
+    const url = 'https://dashboardvendaexterna.onrender.com/dashboard/ranking/xlsx'
+    const resp = await fetch(url)
+    if (!resp.ok) throw new Error('Erro ao baixar XLSX')
+
+    const blob = await resp.blob()
+    const blobUrl = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = blobUrl
+    a.download = 'ranking.xlsx'
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(blobUrl)
+  } catch (e) {
+    console.error('Erro ao baixar ranking XLSX:', e)
+  }
+}
 </script>
 
 <style scoped>
