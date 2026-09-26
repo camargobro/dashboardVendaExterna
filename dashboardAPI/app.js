@@ -9,6 +9,7 @@ import cors from 'cors';
 import pontosRouter from './routes/pontosRouter.js';
 import acoesRouter from './routes/acoesRouter.js';
 import dashboardRouter from './routes/dashboardRouter.js';
+import usuariosRouter from './routes/usuariosRouter.js';
 var app = express();
 
 conectaDB();
@@ -21,6 +22,7 @@ app.use(cors());
 app.use('/pontos', pontosRouter);
 app.use('/acoes', acoesRouter);
 app.use('/dashboard', dashboardRouter);
+app.use('/usuario', usuariosRouter);  
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404));
