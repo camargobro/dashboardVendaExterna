@@ -19,6 +19,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors());
 
+app.get('/', (req, res) => {
+  res.json({ mensagem: 'API funcionando' });
+});
+
 app.use('/pontos', pontosRouter);
 app.use('/acoes', acoesRouter);
 app.use('/dashboard', dashboardRouter);
