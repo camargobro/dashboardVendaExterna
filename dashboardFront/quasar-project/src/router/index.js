@@ -1,7 +1,7 @@
 import { defineRouter } from '#q-app/wrappers'
 import { createRouter, createMemoryHistory, createWebHistory, createWebHashHistory } from 'vue-router'
 import routes from './routes'
-import { getToken, getUser } from 'src/services/auth'
+import { getToken } from 'src/services/auth'
 
 /*
  * If not building with SSR mode, you can
@@ -29,15 +29,12 @@ export default defineRouter(function (/* { store, ssrContext } */) {
 
   Router.beforeEach((to) => {
     const autenticado = Boolean(getToken())
-    const usuario = getUser()
-    const admin = String(usuario?.tipo || '').toLowerCase() === 'admin'
 
-    if ((to.meta.requiresAdmin || to.meta.requiresAuth) && !autenticado) {
+    if (to.meta.requiresAuth && !autenticado) {
       return { path: '/login', query: { redirect: to.fullPath } }
     }
 
-    if (to.meta.requiresAdmin && !admin) return '/acesso-negado'
-    if (to.meta.guestOnly && autenticado) return admin ? '/' : '/acesso-negado'
+    if (to.meta.guestOnly && autenticado) return '/'
   })
 
   if (typeof window !== 'undefined') {

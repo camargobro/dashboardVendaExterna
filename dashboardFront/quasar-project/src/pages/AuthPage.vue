@@ -15,7 +15,7 @@
       <div class="auth-form-wrap">
         <div class="mobile-brand">Ponto<span>Alvo</span></div>
         <div class="auth-eyebrow">ÁREA DA EQUIPE</div>
-        <h1>{{ isRegister ? 'Crie sua conta' : 'Bem-vindo de volta' }}</h1>
+        <h1>{{ isRegister ? 'Crie a conta de sua empresa' : 'Bem-vindo de volta' }}</h1>
         <p class="auth-intro">
           {{ isRegister ? 'Comece a acompanhar sua operação.' : 'Acesse sua operação de vendas.' }}
         </p>
@@ -38,7 +38,7 @@
           <q-input
             v-if="isRegister"
             v-model.trim="form.nome"
-            label="Nome completo"
+            label="Nome da empresa"
             autocomplete="name"
             outlined
             :rules="[obrigatorio]"
@@ -162,13 +162,9 @@ async function enviarFormulario () {
     if (cadastro) {
       form.senha = ''
       form.confirmacao = ''
-      $q.notify({ type: 'positive', message: 'Conta criada. O acesso às áreas é exclusivo para administradores.' })
+      $q.notify({ type: 'positive', message: 'Conta criada. Faça login para acessar.' })
       alterarModo('login')
       return
-    }
-
-    if (String(data.usuario?.tipo || '').toLowerCase() !== 'admin') {
-      throw new Error('Sua conta não tem permissão de administrador para acessar estas áreas.')
     }
 
     saveSession(data)

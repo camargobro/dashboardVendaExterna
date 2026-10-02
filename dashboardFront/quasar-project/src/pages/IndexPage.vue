@@ -4,7 +4,7 @@
 
       <header class="pa-header">
         <h1 class="pa-title">Dashboard de Vendas Externas</h1>
-        <p class="pa-subtitle">Média de vendas por visita em cada ponto de rua</p>
+        <p class="pa-subtitle">Média de vendas por visita em cada local</p>
       </header>
 
       <q-banner v-if="erro" rounded class="bg-red-1 text-negative q-mb-lg">
