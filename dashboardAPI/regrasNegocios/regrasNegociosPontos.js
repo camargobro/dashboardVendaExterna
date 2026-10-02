@@ -1,11 +1,12 @@
 
 import { Pontos } from '../model/modelPonto.js';
 
-export async function pontoDuplicado(ponto) {
+export async function pontoDuplicado(ponto, empresaId) {
     try {
         const duplicado = await Pontos.findOne({
             nome: ponto.nome,
-            endereco: ponto.endereco
+            endereco: ponto.endereco,
+            empresaId
         });
         return duplicado !== null;
     } catch (error) {

@@ -1,9 +1,9 @@
 import { Acoes } from './modelAcao.js';
 import { Pontos } from './modelPonto.js';
 
-export async function getResumo() {
+export async function getResumo(empresaId) {
     try {
-        const acoes = await Acoes.find();
+        const acoes = await Acoes.find({ empresaId });
 
         const totalAcoes = acoes.length;
         const totalVendas = acoes.reduce((acc, a) => acc + a.vendas, 0);
@@ -20,10 +20,10 @@ export async function getResumo() {
     }
 }
 
-export async function getRanking() {
+export async function getRanking(empresaId) {
     try {
-        const acoes = await Acoes.find();
-        const pontos = await Pontos.find();
+        const acoes = await Acoes.find({ empresaId });
+        const pontos = await Pontos.find({ empresaId });
 
         const agrupado = {};
 

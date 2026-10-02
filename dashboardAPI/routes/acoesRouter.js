@@ -1,9 +1,9 @@
 import express from 'express';
 import { buscarAcoes, criarAcoes, removerAcao } from '../controller/acoesController.js';
-import { autenticar, somenteAdmin } from '../middlewares/autenticacaoUsuario.js'
+import { autenticar } from '../middlewares/autenticacaoUsuario.js'
 var router = express.Router();
 
-router.use(autenticar, somenteAdmin);
+router.use(autenticar);
 
 router.get('/', buscarAcoes);
 router.post('/', criarAcoes);

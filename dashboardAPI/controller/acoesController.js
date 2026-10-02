@@ -4,7 +4,7 @@ import { verificaIdPonto } from '../regrasNegocios/regrasNegociosAcoes.js';
 
 export async function buscarAcoes(req, res) {
     try {
-        const acoes = await getAcoes();
+        const acoes = await getAcoes(req.empresaId);
         res.status(200).json(acoes);
     } catch(error){
         console.error("Erro ao obter ações:", error);
@@ -20,12 +20,12 @@ export async function criarAcoes(req, res) {
         }
 
         // Validar se pontoId existe
-        const pontoExiste = await verificaIdPonto(pontoId);
+        const pontoExiste = await verificaIdPonto(pontoId, req.empresaId);
         if (!pontoExiste) {
             return res.status(404).json({ error: "Ponto com esse ID não existe" });
         }
 
-        const novaAcao = await postAcoes({ pontoId, data, leads, vendas });
+        const novaAcao = await postAcoes({ pontoId, data, leads, vendas, empresaId: req.empresaId });
         res.status(201).json(novaAcao);
     } catch(error){
         console.error("Erro ao criar ação:", error);
@@ -36,7 +36,7 @@ export async function criarAcoes(req, res) {
 export async function removerAcao(req, res) {
     try {
         const { id } = req.params;
-        const acaoRemovida = await deleteAcao(id);
+        const acaoRemovida = await deleteAcao(id, req.empresaId);
         if (!acaoRemovida) {
             return res.status(404).json({ error: "Ação com esse ID não encontrada" });
         }

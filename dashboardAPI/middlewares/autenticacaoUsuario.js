@@ -27,7 +27,7 @@ export function autenticar(req, res, next) {
             }
         );
 
-        req.usuario = usuario;
+        req.empresaId = usuario.empresaId;
 
         next();
 
@@ -36,14 +36,4 @@ export function autenticar(req, res, next) {
             error: "Token inválido ou expirado"
         });
     }
-}
-
-export function somenteAdmin(req, res, next) {
-    if (String(req.usuario?.tipo || '').toLowerCase() !== 'admin') {
-        return res.status(403).json({
-            error: "Acesso restrito a administradores"
-        });
-    }
-
-    next();
 }

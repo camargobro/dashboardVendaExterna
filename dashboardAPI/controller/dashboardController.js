@@ -3,7 +3,7 @@ import ExcelJS from 'exceljs';
 
 export async function verDashboard(req, res) {
     try {
-        const resumo = await getResumo();
+        const resumo = await getResumo(req.empresaId);
         res.status(200).json(resumo);
     } catch (error) {
         console.error("Erro ao obter resumo do dashboard:", error);
@@ -13,7 +13,7 @@ export async function verDashboard(req, res) {
 
 export async function verRanking(req, res) {
     try {
-        const data = await getRanking();
+        const data = await getRanking(req.empresaId);
         return res.status(200).json(data);
     } catch (error) {
         console.error("Erro no ranking:", error);
@@ -23,7 +23,7 @@ export async function verRanking(req, res) {
 
 export async function baixarRankingXlsx(req, res) {
     try {
-        const data = await getRanking();
+        const data = await getRanking(req.empresaId);
         const rows = data.ordenado || [];
 
         const workbook = new ExcelJS.Workbook();

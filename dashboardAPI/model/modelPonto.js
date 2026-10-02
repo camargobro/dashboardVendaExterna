@@ -6,6 +6,7 @@ const pontosSchema = new mongoose.Schema({
   bairro: { type: String, required: true },
   cidade: { type: String, required: true },
   tipo: { type: String, required: true },
+  empresaId: { type: String, required: true},
 });
 
 export const Pontos = mongoose.model('Pontos', pontosSchema);
@@ -15,6 +16,10 @@ export async function postPonto(ponto) {
   return await novoPonto.save();
 }
 
-export async function getPontos() {
-  return await Pontos.find();
+export async function getPontos(empresaId) {
+  return await Pontos.find( {empresaId});
+}
+
+export async function deletePonto(id, empresaId) {
+  return await Pontos.findOneAndDelete({ _id: id, empresaId });
 }

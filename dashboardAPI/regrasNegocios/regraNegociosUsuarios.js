@@ -1,8 +1,8 @@
 import { Usuario } from "../model/modelUsuario.js";
 
 
-export async function verificaUsuario(nome, tipo, email, senha) {
-        if (!nome || !tipo || !email || !senha) {
+export async function verificaUsuario(nome, email, senha) {
+    if (!nome || !email || !senha) {
             return false
         }
         return true
