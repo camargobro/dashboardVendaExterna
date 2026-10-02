@@ -37,3 +37,13 @@ export function autenticar(req, res, next) {
         });
     }
 }
+
+export function somenteAdmin(req, res, next) {
+    if (String(req.usuario?.tipo || '').toLowerCase() !== 'admin') {
+        return res.status(403).json({
+            error: "Acesso restrito a administradores"
+        });
+    }
+
+    next();
+}

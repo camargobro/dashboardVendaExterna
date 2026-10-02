@@ -1,1 +1,21 @@
-// app global css in SCSS form
+.q-notification.pa-notify {
+  min-width: 280px;
+  max-width: 420px;
+  padding: 14px 18px;
+  background: #fff;
+  color: $primary;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  border: 1px solid #E3E8EE;
+  border-left: 4px solid $primary;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(11, 60, 93, 0.12);
+}
+
+.q-notification.pa-notify--sucesso {
+  border-left-color: $positive;
+}
+
+.q-notification.pa-notify--erro {
+  border-left-color: $negative;
+}

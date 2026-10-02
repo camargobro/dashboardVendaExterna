@@ -1,504 +1,127 @@
 <template>
-  <div class="bg-grey-2" style="min-height: 100vh; width: 100%">
-    <div class="q-px-lg q-py-xl" style="max-width: 1500px; margin: 0 auto">
+  <div class="pa-page">
+    <div class="pa-container">
 
-      <div class="row items-center q-mb-xl">
-        <div class="col-12 col-md-4"></div>
+      <header class="pa-header">
+        <h1 class="pa-title">Dashboard de Vendas Externas</h1>
+        <p class="pa-subtitle">Média de vendas por visita em cada ponto de rua</p>
+      </header>
 
-        <div class="col-12 col-md-4 text-center">
-          <div class="text-h4 text-weight-bold q-mb-md dashboard-title">
-            Dashboard de Vendas Externas
+      <q-banner v-if="erro" rounded class="bg-red-1 text-negative q-mb-lg">
+        Não foi possível carregar os dados. O servidor pode estar iniciando, tente novamente em instantes.
+        <template v-slot:action>
+          <q-btn flat color="negative" label="Tentar novamente" @click="buscarDados" />
+        </template>
+      </q-banner>
+
+      <div class="row q-col-gutter-md q-mb-lg">
+        <div v-for="item in resumo" :key="item.label" class="col-12 col-sm-4">
+          <div class="pa-card">
+            <div class="pa-label">{{ item.label }}</div>
+            <div class="pa-numero">{{ carregando ? '—' : item.valor }}</div>
           </div>
         </div>
       </div>
 
-      <!-- CARDS RESUMO -->
-      <div class="row q-col-gutter-xl q-mb-xl justify-center">
+      <div class="row q-col-gutter-md q-mb-lg">
+        <div v-for="d in destaques" :key="d.chave" class="col-12 col-md-6">
+          <div class="pa-card pa-destaque" :class="`pa-destaque--${d.chave}`">
 
-        <div class="col-12 col-md-3">
-          <q-card class="shadow-4 rounded-borders bg-white">
-            <q-card-section class="text-center">
-              <q-icon
-                name="visibility"
-                size="36px"
-                class="q-mb-sm text-primary"
-              />
+            <div class="pa-destaque-titulo">{{ d.titulo }}</div>
 
-              <div class="text-subtitle2 text-grey">
-                Total de Ações
+            <div class="row items-start justify-between no-wrap q-col-gutter-md">
+              <div class="col">
+                <div class="pa-ponto-nome">
+                  {{ d.ponto.nome || (carregando ? 'Carregando...' : 'Sem dados') }}
+                </div>
+                <div class="pa-label">
+                  {{ d.ponto.endereco || 'Endereço não informado' }}
+                </div>
               </div>
 
-              <div class="text-h5 text-weight-bold">
-                {{ totalAcoes }}
+              <div class="col-auto text-right">
+                <div class="pa-media">{{ formatarDecimal(d.ponto.mediaVendas) }}</div>
+                <div class="pa-label">vendas/visita</div>
               </div>
-            </q-card-section>
-          </q-card>
+            </div>
+
+            <div class="row pa-stats">
+              <div class="col-4">
+                <div class="pa-label">Visitas</div>
+                <div class="pa-stat">{{ formatarInteiro(d.ponto.totalVisitas) }}</div>
+              </div>
+              <div class="col-4">
+                <div class="pa-label">Vendas</div>
+                <div class="pa-stat">{{ formatarInteiro(d.ponto.totalVendas) }}</div>
+              </div>
+              <div class="col-4">
+                <div class="pa-label">Leads</div>
+                <div class="pa-stat">{{ formatarInteiro(d.ponto.totalLeads) }}</div>
+              </div>
+            </div>
+
+          </div>
         </div>
-
-        <div class="col-12 col-md-3">
-          <q-card class="shadow-4 rounded-borders bg-white">
-            <q-card-section class="text-center">
-              <q-icon
-                name="shopping_cart"
-                size="36px"
-                class="q-mb-sm text-positive"
-              />
-
-              <div class="text-subtitle2 text-grey">
-                Total de Vendas
-              </div>
-
-              <div class="text-h5 text-weight-bold">
-                {{ totalVendas }}
-              </div>
-            </q-card-section>
-          </q-card>
-        </div>
-
-        <div class="col-12 col-md-3">
-          <q-card class="shadow-4 rounded-borders bg-white">
-            <q-card-section class="text-center">
-              <q-icon
-                name="groups"
-                size="36px"
-                class="q-mb-sm text-info"
-              />
-
-              <div class="text-subtitle2 text-grey">
-                Total de Leads
-              </div>
-
-              <div class="text-h5 text-weight-bold">
-                {{ totalLeads }}
-              </div>
-            </q-card-section>
-          </q-card>
-        </div>
-
       </div>
 
-      <!-- MELHOR E PIOR -->
-      <div class="row q-col-gutter-lg q-mt-xl q-mb-xl">
+      <div class="pa-card pa-card--tabela">
 
-        <!-- MELHOR -->
-        <div class="col-12 col-md-6">
-
-          <q-card class="shadow-4 rounded-borders bg-white">
-
-            <q-card-section class="row items-center q-gutter-sm">
-              <q-icon
-                name="emoji_events"
-                color="positive"
-                size="lg"
-              />
-
-              <div class="text-h5 text-weight-bold">
-                Melhor ponto
-              </div>
-            </q-card-section>
-
-            <q-card-section class="q-gutter-md">
-
-              <div class="row items-center justify-between bg-green-1 q-pa-md rounded-borders">
-
-                <div class="row items-center q-gutter-md">
-
-                  <q-badge
-                    color="positive"
-                    rounded
-                    size="lg"
-                  >
-                    Melhor
-                  </q-badge>
-
-                  <div>
-
-                    <div class="text-h6 text-weight-bold">
-                      {{ melhorVendas.nome || 'Carregando...' }}
-                    </div>
-
-                    <div class="text-body2 text-grey-7">
-                      {{ melhorVendas.endereco || 'Endereço não informado' }}
-                    </div>
-
-                  </div>
-
-                </div>
-
-                <div class="text-right text-positive text-h6 text-weight-bold">
-                  {{
-                    melhorVendas.mediaVendas
-                      ? melhorVendas.mediaVendas.toFixed(2)
-                      : '0.00'
-                  }}
-
-                  <br>
-
-                  <span class="text-body1 text-grey">
-                    vendas/visita
-                  </span>
-                </div>
-
-              </div>
-
-              <div class="row items-center q-pt-sm justify-between">
-
-                <div class="text-body1 text-grey">
-                  Clique para ver mais informações do ponto
-                </div>
-
-                <q-btn
-                  flat
-                  color="primary"
-                  icon="visibility"
-                  :label="showDetalhesMelhor ? 'Ver menos' : 'Ver mais'"
-                  @click="showDetalhesMelhor = !showDetalhesMelhor"
-                  class="transition-all"
-                />
-
-              </div>
-
-              <div
-                v-show="showDetalhesMelhor"
-                class="q-mt-md q-pa-lg rounded-borders"
-                style="
-                  background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
-                  border: 1px solid rgba(76, 175, 80, 0.25);
-                "
-              >
-
-                <div class="row items-center q-mb-md">
-
-                  <q-icon
-                    name="insights"
-                    color="positive"
-                    size="28px"
-                    class="q-mr-sm"
-                  />
-
-                  <div class="text-subtitle1 text-weight-bold text-positive">
-                    Detalhes do Melhor Ponto
-                  </div>
-
-                </div>
-
-                <div class="row q-col-gutter-md">
-
-                  <div class="col-12 col-sm-6">
-                    <div class="bg-white q-pa-md rounded-borders shadow-1">
-
-                      <div class="text-caption text-grey-7">
-                        Visitas
-                      </div>
-
-                      <div class="text-h5 text-weight-bold">
-                        {{ melhorVendas.totalVisitas || 0 }}
-                      </div>
-
-                    </div>
-                  </div>
-
-                  <div class="col-12 col-sm-6">
-                    <div class="bg-white q-pa-md rounded-borders shadow-1">
-
-                      <div class="text-caption text-grey-7">
-                        Total de Vendas
-                      </div>
-
-                      <div class="text-h5 text-weight-bold text-positive">
-                        {{ melhorVendas.totalVendas || 0 }}
-                      </div>
-
-                    </div>
-                  </div>
-
-                  <div class="col-12 col-sm-6">
-                    <div class="bg-white q-pa-md rounded-borders shadow-1">
-
-                      <div class="text-caption text-grey-7">
-                        Total de Leads
-                      </div>
-
-                      <div class="text-h5 text-weight-bold text-info">
-                        {{ melhorVendas.totalLeads || 0 }}
-                      </div>
-
-                    </div>
-                  </div>
-
-                  <div class="col-12 col-sm-6">
-                    <div class="bg-white q-pa-md rounded-borders shadow-1">
-
-                      <div class="text-caption text-grey-7">
-                        Média de vendas
-                      </div>
-
-                      <div class="text-h5 text-weight-bold text-primary">
-                        {{
-                          melhorVendas.mediaVendas
-                            ? melhorVendas.mediaVendas.toFixed(2)
-                            : '0.00'
-                        }}
-                      </div>
-
-                    </div>
-                  </div>
-
-                </div>
-
-              </div>
-
-            </q-card-section>
-
-          </q-card>
-
+        <div class="row items-center justify-between pa-tabela-topo">
+          <div>
+            <div class="pa-secao-titulo">Ranking de performance</div>
+            <div class="pa-label">Ordenado pela média de vendas por visita</div>
+          </div>
+          <q-btn
+            outline
+            color="primary"
+            label="Exportar planilha"
+            no-caps
+            @click="baixarRanking"
+          />
         </div>
 
-        <!-- PIOR -->
-        <div class="col-12 col-md-6">
+        <q-table
+          v-model:pagination="pagination"
+          :rows="ranking"
+          :columns="columns"
+          :loading="carregando"
+          :rows-per-page-options="[10, 25, 50, 0]"
+          rows-per-page-label="Linhas por página"
+          no-data-label="Nenhum ponto encontrado"
+          :pagination-label="(inicio, fim, total) => `${inicio}-${fim} de ${total}`"
+          table-header-class="pa-thead"
+          row-key="nome"
+          flat
+        >
 
-          <q-card class="shadow-4 rounded-borders bg-white">
+          <template v-slot:body-cell-pos="props">
+            <q-td :props="props" :class="['pa-pos', { 'pa-pos--top': props.row.pos <= 3 }]">
+              {{ props.row.pos }}
+            </q-td>
+          </template>
 
-            <q-card-section class="row items-center q-gutter-sm">
+          <template v-slot:body-cell-nome="props">
+            <q-td :props="props">
+              <div class="pa-ponto-nome">{{ props.row.nome }}</div>
+              <div class="pa-label">{{ props.row.endereco }}</div>
+            </q-td>
+          </template>
 
-              <q-icon
-                name="close"
-                color="negative"
-                size="lg"
-              />
-
-              <div class="text-h5 text-weight-bold">
-                Pior ponto
+          <template v-slot:body-cell-mediaVendas="props">
+            <q-td :props="props">
+              <div class="pa-barra-wrap">
+                <div class="pa-barra">
+                  <div
+                    class="pa-barra-fill"
+                    :style="{ width: larguraBarra(props.row.mediaVendas) }"
+                  ></div>
+                </div>
+                <span class="pa-barra-valor">{{ formatarDecimal(props.row.mediaVendas) }}</span>
               </div>
+            </q-td>
+          </template>
 
-            </q-card-section>
-
-            <q-card-section class="q-gutter-md">
-
-              <div class="row items-center justify-between bg-red-1 q-pa-md rounded-borders">
-
-                <div class="row items-center q-gutter-md">
-
-                  <q-badge
-                    color="negative"
-                    rounded
-                    size="lg"
-                  >
-                    Pior
-                  </q-badge>
-
-                  <div>
-
-                    <div class="text-h6 text-weight-bold">
-                      {{ piorPonto.nome || 'Carregando...' }}
-                    </div>
-
-                    <div class="text-body2 text-grey-7">
-                      {{ piorPonto.endereco || 'Endereço não informado' }}
-                    </div>
-
-                  </div>
-
-                </div>
-
-                <div class="text-right text-negative text-h6 text-weight-bold">
-
-                  {{
-                    piorPonto.mediaVendas
-                      ? piorPonto.mediaVendas.toFixed(2)
-                      : '0.00'
-                  }}
-
-                  <br>
-
-                  <span class="text-body1 text-grey">
-                    vendas/visita
-                  </span>
-
-                </div>
-
-              </div>
-
-              <div class="row items-center q-pt-sm justify-between">
-
-                <div class="text-body1 text-grey">
-                  Clique para ver mais informações do ponto
-                </div>
-
-                <q-btn
-                  flat
-                  color="negative"
-                  icon="visibility"
-                  :label="showDetalhesPior ? 'Ver menos' : 'Ver mais'"
-                  @click="showDetalhesPior = !showDetalhesPior"
-                  class="transition-all"
-                />
-
-              </div>
-
-              <div
-                v-show="showDetalhesPior"
-                class="q-mt-md q-pa-lg rounded-borders"
-                style="
-                  background: linear-gradient(135deg, #ffebee, #fce4ec);
-                  border: 1px solid rgba(244, 67, 54, 0.25);
-                "
-              >
-
-                <div class="row items-center q-mb-md">
-
-                  <q-icon
-                    name="warning"
-                    color="negative"
-                    size="28px"
-                    class="q-mr-sm"
-                  />
-
-                  <div class="text-subtitle1 text-weight-bold text-negative">
-                    Detalhes do Pior Ponto
-                  </div>
-
-                </div>
-
-                <div class="row q-col-gutter-md">
-
-                  <div class="col-12 col-sm-6">
-                    <div class="bg-white q-pa-md rounded-borders shadow-1">
-
-                      <div class="text-caption text-grey-7">
-                        Visitas
-                      </div>
-
-                      <div class="text-h5 text-weight-bold">
-                        {{ piorPonto.totalVisitas || 0 }}
-                      </div>
-
-                    </div>
-                  </div>
-
-                  <div class="col-12 col-sm-6">
-                    <div class="bg-white q-pa-md rounded-borders shadow-1">
-
-                      <div class="text-caption text-grey-7">
-                        Total de Vendas
-                      </div>
-
-                      <div class="text-h5 text-weight-bold text-negative">
-                        {{ piorPonto.totalVendas || 0 }}
-                      </div>
-
-                    </div>
-                  </div>
-
-                  <div class="col-12 col-sm-6">
-                    <div class="bg-white q-pa-md rounded-borders shadow-1">
-
-                      <div class="text-caption text-grey-7">
-                        Total de Leads
-                      </div>
-
-                      <div class="text-h5 text-weight-bold text-orange">
-                        {{ piorPonto.totalLeads || 0 }}
-                      </div>
-
-                    </div>
-                  </div>
-
-                  <div class="col-12 col-sm-6">
-                    <div class="bg-white q-pa-md rounded-borders shadow-1">
-
-                      <div class="text-caption text-grey-7">
-                        Média de vendas
-                      </div>
-
-                      <div class="text-h5 text-weight-bold text-deep-orange">
-                        {{
-                          piorPonto.mediaVendas
-                            ? piorPonto.mediaVendas.toFixed(2)
-                            : '0.00'
-                        }}
-                      </div>
-
-                    </div>
-                  </div>
-
-                </div>
-
-              </div>
-
-            </q-card-section>
-
-          </q-card>
-
-        </div>
-
-      </div>
-
-      <!-- RANKING -->
-      <div class="q-mb-xl">
-
-        <q-card class="shadow-3 rounded-borders q-mb-lg bg-white">
-
-          <q-card-section class="row items-center justify-between">
-            <div class="text-h5 text-weight-bold">Ranking de Performance</div>
-            <q-btn
-              flat
-              color="primary"
-              icon="download"
-              label="Exportar"
-              @click="baixarRanking"
-            />
-          </q-card-section>
-
-          <q-table
-            :rows="ranking"
-            :columns="columns"
-            row-key="nome"
-            flat
-          >
-
-            <template v-slot:body-cell-nome="props">
-
-              <q-td class="text-left">
-
-                <div class="row items-center q-gutter-md">
-
-                  <q-badge
-                    v-if="props.row.pos <= 3"
-                    :color="['yellow','grey-5','brown'][props.row.pos - 1]"
-                    text-color="black"
-                    rounded
-                    size="lg"
-                  >
-                    {{ props.row.pos }}
-                  </q-badge>
-
-                  <div class="column">
-
-                    <div class="text-h6 text-weight-bold">
-                      {{ props.row.nome }}
-                    </div>
-
-                    <div class="text-body2 text-grey-7">
-                      {{ props.row.endereco }}
-                    </div>
-
-                    <div class="text-body1 text-grey">
-                      {{ props.row.visitas }} visitas
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </q-td>
-
-            </template>
-
-          </q-table>
-
-        </q-card>
-
+        </q-table>
       </div>
 
     </div>
@@ -506,7 +129,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { apiFetch } from 'src/services/api'
 
 const totalVendas = ref(0)
 const totalAcoes = ref(0)
@@ -517,10 +141,49 @@ const ranking = ref([])
 const melhorVendas = ref({})
 const piorPonto = ref({})
 
-const showDetalhesMelhor = ref(false)
-const showDetalhesPior = ref(false)
+const carregando = ref(true)
+const erro = ref(false)
+
+const pagination = ref({ rowsPerPage: 10 })
+
+function formatarInteiro(valor) {
+  return Number(valor || 0).toLocaleString('pt-BR')
+}
+
+function formatarDecimal(valor) {
+  return Number(valor || 0).toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })
+}
+
+const resumo = computed(() => [
+  { label: 'Total de ações', valor: formatarInteiro(totalAcoes.value) },
+  { label: 'Total de vendas', valor: formatarInteiro(totalVendas.value) },
+  { label: 'Total de leads', valor: formatarInteiro(totalLeads.value) }
+])
+
+const destaques = computed(() => [
+  { chave: 'melhor', titulo: 'Melhor ponto', ponto: melhorVendas.value },
+  { chave: 'pior', titulo: 'Pior ponto', ponto: piorPonto.value }
+])
+
+const maiorMedia = computed(() =>
+  Math.max(0, ...ranking.value.map(item => item.mediaVendas))
+)
+
+function larguraBarra(valor) {
+  if (!maiorMedia.value) return '0%'
+  return `${(valor / maiorMedia.value) * 100}%`
+}
 
 const columns = [
+  {
+    name: 'pos',
+    label: '#',
+    field: 'pos',
+    align: 'left'
+  },
   {
     name: 'nome',
     label: 'Ponto',
@@ -531,28 +194,33 @@ const columns = [
     name: 'visitas',
     label: 'Visitas',
     field: 'visitas',
-    align: 'center'
+    align: 'center',
+    format: valor => formatarInteiro(valor)
   },
   {
     name: 'mediaVendas',
     label: 'Média vendas',
     field: 'mediaVendas',
-    align: 'center'
+    align: 'left'
   },
   {
     name: 'mediaLeads',
     label: 'Média leads',
     field: 'mediaLeads',
-    align: 'center'
+    align: 'center',
+    format: valor => formatarDecimal(valor)
   }
 ]
 
 async function buscarDados() {
+  carregando.value = true
+  erro.value = false
+
   try {
 
-    const responseDashboard = await fetch('https://dashboardvendaexterna.onrender.com/dashboard')
+    const responseDashboard = await apiFetch('/dashboard')
 
-    const responseRanking = await fetch('https://dashboardvendaexterna.onrender.com/dashboard/ranking')
+    const responseRanking = await apiFetch('/dashboard/ranking')
 
     if (!responseDashboard.ok) {
       throw new Error('Erro ao buscar dados do dashboard')
@@ -582,13 +250,18 @@ async function buscarDados() {
         mediaLeads: Math.round(item.mediaLeads * 100) / 100
       }))
 
-      melhorVendas.value = dataRanking.melhorVendas
+      melhorVendas.value = dataRanking.melhorVendas || {}
 
-      piorPonto.value = dataRanking.piorPonto
+      piorPonto.value = dataRanking.piorPonto || {}
+    } else {
+      erro.value = true
     }
 
   } catch (e) {
+    erro.value = true
     console.error('Erro ao carregar o dashboard:', e)
+  } finally {
+    carregando.value = false
   }
 }
 
@@ -598,8 +271,7 @@ onMounted(() => {
 
 async function baixarRanking() {
   try {
-    const url = 'https://dashboardvendaexterna.onrender.com/dashboard/ranking/xlsx'
-    const resp = await fetch(url)
+    const resp = await apiFetch('/dashboard/ranking/xlsx')
     if (!resp.ok) throw new Error('Erro ao baixar XLSX')
 
     const blob = await resp.blob()
@@ -618,15 +290,177 @@ async function baixarRanking() {
 </script>
 
 <style scoped>
-body {
-  font-family: 'Lato', sans-serif;
+.pa-page {
+  --pa-navy: #0B3C5D;
+  --pa-orange: #FF7A1A;
+  --pa-bom: #2E7D32;
+  --pa-ruim: #C62828;
+  --pa-borda: #E3E8EE;
+  --pa-suave: #5F6B7A;
+
+  min-height: 100vh;
+  width: 100%;
+  background: #F4F6F9;
 }
 
-.transition-all {
-  transition: all 0.3s ease;
+.pa-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
 }
 
-.rounded-borders {
-  border-radius: 16px;
+.pa-header {
+  margin-bottom: 28px;
+}
+
+.pa-title {
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--pa-navy);
+}
+
+.pa-title::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 4px;
+  margin-top: 12px;
+  border-radius: 2px;
+  background: var(--pa-orange);
+}
+
+.pa-subtitle {
+  margin: 12px 0 0;
+  color: var(--pa-suave);
+}
+
+.pa-card {
+  height: 100%;
+  padding: 20px 24px;
+  background: #fff;
+  border: 1px solid var(--pa-borda);
+  border-radius: 12px;
+}
+
+.pa-card--tabela {
+  padding: 0;
+  overflow: hidden;
+}
+
+.pa-label {
+  font-size: 0.8125rem;
+  color: var(--pa-suave);
+}
+
+.pa-numero {
+  margin-top: 4px;
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--pa-navy);
+}
+
+.pa-destaque {
+  border-left: 4px solid var(--pa-cor);
+}
+
+.pa-destaque--melhor {
+  --pa-cor: var(--pa-bom);
+}
+
+.pa-destaque--pior {
+  --pa-cor: var(--pa-ruim);
+}
+
+.pa-destaque-titulo {
+  margin-bottom: 12px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--pa-cor);
+}
+
+.pa-ponto-nome {
+  font-size: 1.125rem;
+  line-height: 1.3;
+  font-weight: 700;
+  color: var(--pa-navy);
+}
+
+.pa-media {
+  font-size: 2rem;
+  line-height: 1.1;
+  font-weight: 700;
+  color: var(--pa-cor);
+}
+
+.pa-stats {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--pa-borda);
+}
+
+.pa-stat {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--pa-navy);
+}
+
+.pa-tabela-topo {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--pa-borda);
+}
+
+.pa-secao-titulo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--pa-navy);
+}
+
+.pa-pos {
+  width: 56px;
+  font-weight: 700;
+  color: var(--pa-suave);
+}
+
+.pa-pos--top {
+  color: var(--pa-navy);
+}
+
+.pa-barra-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 180px;
+}
+
+.pa-barra {
+  flex: 1;
+  height: 8px;
+  background: #EEF1F5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pa-barra-fill {
+  height: 100%;
+  background: var(--pa-orange);
+  border-radius: 4px;
+}
+
+.pa-barra-valor {
+  min-width: 48px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--pa-navy);
+}
+
+.pa-card--tabela :deep(.pa-thead th) {
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: var(--pa-navy);
+  background: #F8FAFC;
 }
 </style>

@@ -21,7 +21,3 @@ export async function verificaDuplicado(usuario) {
 export async function loginUsuario(email) {
     return await Usuario.findOne({ email });
 }
-
-export async function autenticaUsuario(usuario){
-    var decoded = jwt.verify(token, 'wrong-secret');
-}

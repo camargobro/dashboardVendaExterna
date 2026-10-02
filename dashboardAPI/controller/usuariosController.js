@@ -18,27 +18,28 @@ export async function buscarUsuarios(req, res) {
 
 export async function criarUsuario(req, res) {
     try {
-        const { nome, tipo, email, senha } = req.body;
+        const { nome, email, senha } = req.body;
+        const tipo = 'vendedor';
+
+        const camposValidos = await verificaUsuario(nome, tipo, email, senha);
+        if (!camposValidos) {
+            return res.status(400).json({ error: "Algum campo está faltando" });
+        }
 
         const duplicado = await verificaDuplicado({ nome, email });
         if (duplicado) {
             return res.status(400).json({ error: "Usuário já existe, tente novamente com outros dados" })
         }
 
-        const camposValidos = await verificaUsuario(nome, tipo, email, senha);
-
-        if (!camposValidos) {
-            return res.status(400).json({
-                error: "Algum campo está faltando"
-            });
-        }
         const senhaHash = await bcrypt.hash(senha, saltRounds)
         const novoUsuario = await postUsuario({ nome, tipo, email, senha: senhaHash });
         if (!novoUsuario) {
             return res.status(400).json({ error: "Erro ao criar usuario" });
         }
 
-        return res.status(201).json(novoUsuario);
+        const usuario = { id: novoUsuario._id, nome: novoUsuario.nome, tipo: novoUsuario.tipo, email: novoUsuario.email };
+
+        return res.status(201).json({ message: "Usuário criado com sucesso", usuario });
     } catch (error) {
         console.error("Erro ao criar usuario:", error);
         return res.status(500).json({ error: "Erro ao criar usuario" });
@@ -80,6 +81,12 @@ export async function login(req, res) {
             });
         }
 
+        if (String(usuario.tipo || '').toLowerCase() !== 'admin') {
+            return res.status(403).json({
+                error: "Acesso restrito a administradores"
+            });
+        }
+
 
         const token = jwt.sign(
             {
@@ -94,9 +101,11 @@ export async function login(req, res) {
             }
         );
 
+        const usuarioSeguro = { id: usuario._id, nome: usuario.nome, tipo: usuario.tipo, email: usuario.email };
+
         return res.status(200).json({
             message: "Login realizado com sucesso",
-            usuario,
+            usuario: usuarioSeguro,
             token
         });
 

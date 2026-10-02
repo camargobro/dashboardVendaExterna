@@ -17,7 +17,7 @@ export async function postUsuario(usuario) {
 }
 
 export async function getUsuarios() {
-  return await Usuario.find();
+  return await Usuario.find().select('-senha');
 }
 
 export async function deleteUsuario(id) {

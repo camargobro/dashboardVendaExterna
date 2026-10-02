@@ -1,260 +1,257 @@
 <template>
-  <q-page class="bg-grey-1">
-    <div class="q-pa-md" style="max-width: 960px; margin: 0 auto;">
-      <div class="row items-center justify-between q-pb-md q-mb-lg">
-        <div>
-          <div class="text-h5 text-weight-bold">Gerenciar Ações</div>
-        </div>
-      </div>
+  <q-page class="pa-page">
+    <div class="pa-container" :class="{ 'pa-container--larga': isHistory }">
 
       <div v-if="!isHistory">
-        <q-card class="bg-white shadow-4 rounded-borders q-pa-xl" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);">
-          <q-card-section class="text-center q-pb-lg">
-            <q-icon name="add_circle" size="48px" class="text-primary q-mb-md" />
-            <div class="text-h5 text-weight-bold text-primary q-mb-sm">Registrar Nova Ação</div>
-            <div class="text-body2 text-grey-7">Preencha os detalhes abaixo para registrar uma nova ação de vendas</div>
-          </q-card-section>
 
-          <q-card-section>
-            <q-form @submit.prevent="enviarAcao" class="q-gutter-xl">
-              <div class="row q-col-gutter-xl q-row-gutter-xl">
-                <div class="col-12 col-md-6">
-                  <q-select
-                    filled
-                    label="Ponto de Venda"
-                    v-model="form.pontoId"
-                    :options="pontosOptions"
-                    option-label="label"
-                    option-value="value"
-                    emit-value
-                    map-options
-                    placeholder="Selecione um ponto"
-                    outlined
-                    class="hover:shadow-4 hover:bg-grey-1 transition-all"
-                    label-class="text-weight-medium"
-                  >
-                    <template v-slot:prepend>
-                      <q-icon name="location_on" />
-                    </template>
-                  </q-select>
+        <header class="pa-header">
+          <h1 class="pa-title">Registrar ação</h1>
+          <p class="pa-subtitle">Informe o ponto, a data e o resultado da ação de vendas</p>
+        </header>
 
-                  <div class="q-mt-xs text-right">
-                    <q-btn
-                      flat
-                      dense
-                      color="grey-7"
-                      label="Adicionar novo ponto"
-                      icon="add"
-                      @click="toggleAddPonto"
-                      class="text-caption hover:shadow-3 hover:scale-110 transition-all"
-                    />
-                  </div>
-                </div>
+        <div class="pa-card">
+          <q-form ref="formRef" @submit.prevent="enviarAcao">
+            <div class="row q-col-gutter-md">
 
-                <div class="col-12 col-md-6">
-            <q-input
-  filled
-  label="Data da Ação"
-  v-model="form.data"
-  type="date"
-  outlined
-  :min="'2023-01-01'"
-  :max="new Date().toISOString().split('T')[0]"
-  class="hover:shadow-4 hover:bg-grey-1 transition-all"
-  label-class="text-weight-medium"
->
-  <template v-slot:prepend>
-    <q-icon name="calendar_today" />
-  </template>
-</q-input>
-                </div>
+              <div class="col-12">
+                <q-select
+                  v-model="form.pontoId"
+                  :options="pontosFiltrados"
+                  :loading="carregandoPontos"
+                  :rules="[obrigatorio]"
+                  label="Ponto de venda"
+                  option-label="label"
+                  option-value="value"
+                  emit-value
+                  map-options
+                  use-input
+                  hide-selected
+                  fill-input
+                  input-debounce="0"
+                  lazy-rules
+                  outlined
+                  @filter="filtrarPontos"
+                >
+                  <template v-slot:no-option>
+                    <q-item>
+                      <q-item-section class="text-grey">Nenhum ponto encontrado</q-item-section>
+                    </q-item>
+                  </template>
+                </q-select>
 
-                <div class="col-12 col-md-6">
-                  <q-input
-                    filled
-                    label="Número de Leads"
-                    v-model.number="form.leads"
-                    type="number"
-                    min="0"
-                    outlined
-                    class="hover:shadow-4 hover:bg-grey-1 transition-all"
-                    label-class="text-weight-medium"
-                  >
-                    <template v-slot:prepend>
-                      <q-icon name="people" />
-                    </template>
-                  </q-input>
-                </div>
-
-                <div class="col-12 col-md-6">
-                  <q-input
-                    filled
-                    label="Número de Vendas"
-                    v-model.number="form.vendas"
-                    type="number"
-                    min="0"
-                    outlined
-                    class="hover:shadow-4 hover:bg-grey-1 transition-all"
-                    label-class="text-weight-medium"
-                  >
-                    <template v-slot:prepend>
-                      <q-icon name="shopping_cart" />
-                    </template>
-                  </q-input>
-                </div>
-              </div>
-
-              <div class="row justify-center q-pt-lg">
-                <q-btn
-                  color="primary"
-                  label="Registrar Ação"
-                  type="submit"
-                  size="lg"
-                  icon="send"
-                  class="q-px-xl hover:shadow-4 hover:scale-110 transition-all"
-                />
                 <q-btn
                   flat
-                  label="Limpar Campos"
-                  class="q-ml-md hover:shadow-3 hover:scale-110 transition-all"
-                  @click="resetForm"
-                  icon="clear"
+                  dense
+                  no-caps
+                  color="primary"
+                  label="Adicionar novo ponto"
+                  @click="toggleAddPonto"
                 />
               </div>
-            </q-form>
-          </q-card-section>
-        </q-card>
+
+              <div class="col-12 col-md-4">
+                <q-input
+                  v-model="form.data"
+                  :rules="[obrigatorio]"
+                  label="Data da ação"
+                  type="date"
+                  min="2023-01-01"
+                  :max="hoje"
+                  stack-label
+                  lazy-rules
+                  outlined
+                />
+              </div>
+
+              <div class="col-12 col-sm-6 col-md-4">
+                <q-input
+                  v-model.number="form.leads"
+                  :rules="[naoNegativo]"
+                  label="Leads"
+                  type="number"
+                  min="0"
+                  lazy-rules
+                  outlined
+                />
+              </div>
+
+              <div class="col-12 col-sm-6 col-md-4">
+                <q-input
+                  v-model.number="form.vendas"
+                  :rules="[naoNegativo]"
+                  label="Vendas"
+                  type="number"
+                  min="0"
+                  lazy-rules
+                  outlined
+                />
+              </div>
+
+            </div>
+
+            <div class="row justify-end q-gutter-sm q-mt-md">
+              <q-btn flat no-caps color="grey-8" label="Limpar campos" @click="resetForm" />
+              <q-btn
+                unelevated
+                no-caps
+                color="primary"
+                label="Registrar ação"
+                type="submit"
+                class="q-px-lg"
+                :loading="enviando"
+              />
+            </div>
+          </q-form>
+        </div>
 
         <q-dialog v-model="addNewPonto" persistent content-class="dialog-blur">
-          <q-card class="q-pa-md" style="min-width: 420px; max-width: 620px;">
-            <q-card-section>
-              <div class="row items-center justify-between q-mb-md">
-                <div>
-                  <div class="text-h6 text-weight-bold">Novo ponto</div>
-                  <div class="text-caption text-grey">Preencha as informações para criar o ponto e usar na ação.</div>
-                </div>
-                <q-btn flat round dense icon="close" @click="toggleAddPonto" class="hover:shadow-3 hover:scale-110 transition-all" />
-              </div>
+          <q-card class="pa-dialog">
+            <q-form @submit.prevent="salvarNovoPonto">
+              <q-card-section>
+                <div class="pa-secao-titulo">Novo ponto</div>
+                <div class="pa-label">O ponto será selecionado automaticamente na ação.</div>
+              </q-card-section>
 
-              <div class="row q-col-gutter-md q-row-gutter-md">
-                <div class="col-12 col-md-6">
-                  <q-input
-                    filled
-                    label="Nome do ponto"
-                    v-model="novoPonto.nome"
-                    outlined
-                    class="hover:shadow-4 hover:bg-grey-1 transition-all"
-                  />
+              <q-card-section class="q-pt-none">
+                <div class="row q-col-gutter-md">
+                  <div class="col-12 col-sm-8">
+                    <q-input v-model="novoPonto.nome" :rules="[obrigatorio]" label="Nome do ponto" lazy-rules outlined />
+                  </div>
+                  <div class="col-12 col-sm-4">
+                    <q-input v-model="novoPonto.tipo" :rules="[obrigatorio]" label="Tipo" lazy-rules outlined />
+                  </div>
+                  <div class="col-12">
+                    <q-input v-model="novoPonto.endereco" :rules="[obrigatorio]" label="Endereço" lazy-rules outlined />
+                  </div>
+                  <div class="col-12 col-sm-6">
+                    <q-input v-model="novoPonto.bairro" :rules="[obrigatorio]" label="Bairro" lazy-rules outlined />
+                  </div>
+                  <div class="col-12 col-sm-6">
+                    <q-input v-model="novoPonto.cidade" :rules="[obrigatorio]" label="Cidade" lazy-rules outlined />
+                  </div>
                 </div>
-                <div class="col-12 col-md-6">
-                  <q-input
-                    filled
-                    label="Tipo"
-                    v-model="novoPonto.tipo"
-                    outlined
-                    class="hover:shadow-4 hover:bg-grey-1 transition-all"
-                  />
-                </div>
-                <div class="col-12">
-                  <q-input
-                    filled
-                    label="Endereço"
-                    v-model="novoPonto.endereco"
-                    outlined
-                    class="hover:shadow-4 hover:bg-grey-1 transition-all"
-                  />
-                </div>
-                <div class="col-12 col-md-6">
-                  <q-input
-                    filled
-                    label="Bairro"
-                    v-model="novoPonto.bairro"
-                    outlined
-                    class="hover:shadow-4 hover:bg-grey-1 transition-all"
-                  />
-                </div>
-                <div class="col-12 col-md-6">
-                  <q-input
-                    filled
-                    label="Cidade"
-                    v-model="novoPonto.cidade"
-                    outlined
-                    class="hover:shadow-4 hover:bg-grey-1 transition-all"
-                  />
-                </div>
-              </div>
-            </q-card-section>
+              </q-card-section>
 
-            <q-card-actions align="right">
-              <q-btn flat label="Cancelar" color="negative" @click="toggleAddPonto" class="hover:shadow-3 hover:scale-110 transition-all" />
-              <q-btn label="Salvar ponto" color="primary" @click="salvarNovoPonto" class="hover:shadow-4 hover:scale-110 transition-all" />
-            </q-card-actions>
+              <q-card-actions align="right" class="q-pa-md">
+                <q-btn flat no-caps color="grey-8" label="Cancelar" @click="toggleAddPonto" />
+                <q-btn
+                  unelevated
+                  no-caps
+                  color="primary"
+                  label="Salvar ponto"
+                  type="submit"
+                  :loading="salvandoPonto"
+                />
+              </q-card-actions>
+            </q-form>
           </q-card>
         </q-dialog>
       </div>
 
       <div v-else>
-        <div class="text-h6 text-weight-bold q-mb-lg">Histórico de ações</div>
-        <div v-if="acoesComNomes.length === 0" class="text-body2 text-grey-7">Nenhuma ação registrada ainda.</div>
 
-        <div v-else class="q-gutter-y-md">
-          <div v-for="acao in acoesComNomes" :key="acao._id" class="q-mb-lg">
-            <q-card :class="['shadow-1 rounded-borders', acaoBackgroundClass(acao.vendas)]">
-              <q-card-section>
-                <div class="row items-start q-col-gutter-md">
-                  <div class="col-12 col-md-5">
-                    <div class="text-subtitle2 text-grey">Nome do ponto</div>
-                    <div class="text-h6 text-weight-bold">{{ acao.pontoNome }}</div>
-                    <div class="text-caption text-grey">{{ acao.endereco }}</div>
-                  </div>
-                  <div class="col-12 col-md-2">
-                    <div class="text-subtitle2 text-grey">Data</div>
-                    <div>{{ formatDate(acao.data) }}</div>
-                  </div>
-                  <div class="col-6 col-md-2">
-                    <div class="text-subtitle2 text-grey">Leads</div>
-                    <div>{{ acao.leads }}</div>
-                  </div>
-                  <div class="col-6 col-md-3">
-                    <div class="text-subtitle2 text-grey">Vendas</div>
-                    <div>{{ acao.vendas }}</div>
-                  </div>
-                 <div class="col-auto">
-  <div class="row justify-end full-height items-start">
-    <q-btn
-  flat
-  icon="delete"
-  label="Excluir"
-  color="grey-8"
-  @click="confirmarExclusao(acao._id)"
-  class="bg-grey-3 text-weight-medium"
-/>
-  </div>
-</div>
-                </div>
-              </q-card-section>
-            </q-card>
+        <header class="pa-header">
+          <h1 class="pa-title">Histórico de ações</h1>
+          <p class="pa-subtitle">Da ação mais recente para a mais antiga</p>
+        </header>
+
+        <div class="pa-card pa-card--tabela">
+
+          <div class="pa-tabela-topo pa-label">
+            Cor das vendas:
+            <span class="pa-vendas--zero">0</span>,
+            <span class="pa-vendas--baixa">de 1 a 4</span>,
+            <span class="pa-vendas--boa">5 ou mais</span>
           </div>
+
+          <q-table
+            v-model:pagination="paginacao"
+            :rows="acoesComNomes"
+            :columns="columns"
+            :loading="carregandoAcoes"
+            :rows-per-page-options="[10, 25, 50, 0]"
+            rows-per-page-label="Linhas por página"
+            no-data-label="Nenhuma ação registrada ainda."
+            :pagination-label="(inicio, fim, total) => `${inicio}-${fim} de ${total}`"
+            table-header-class="pa-thead"
+            row-key="_id"
+            flat
+          >
+
+            <template v-slot:body-cell-pontoNome="props">
+              <q-td :props="props">
+                <div class="pa-ponto-nome">{{ props.row.pontoNome }}</div>
+                <div class="pa-label">{{ props.row.endereco }}</div>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-vendas="props">
+              <q-td :props="props">
+                <span class="pa-vendas" :class="vendasClass(props.row.vendas)">
+                  {{ props.row.vendas }}
+                </span>
+              </q-td>
+            </template>
+
+            <template v-slot:body-cell-acoes="props">
+              <q-td :props="props">
+                <q-btn
+                  flat
+                  dense
+                  no-caps
+                  color="negative"
+                  label="Excluir"
+                  @click="confirmarExclusao(props.row._id)"
+                />
+              </q-td>
+            </template>
+
+          </q-table>
         </div>
       </div>
+
     </div>
   </q-page>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, nextTick, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 import { useRoute } from 'vue-router';
+import { apiFetch } from 'src/services/api';
 
 const $q = useQuasar();
 const route = useRoute();
 const acoes = ref([]);
 const pontos = ref([]);
-const form = ref({ pontoId: '', data: '', leads: 0, vendas: 0 });
+const hoje = formatarDataInput(new Date());
+const form = ref({ pontoId: '', data: hoje, leads: 0, vendas: 0 });
+const formRef = ref(null);
 const addNewPonto = ref(false);
 const novoPonto = ref({ nome: '', endereco: '', bairro: '', cidade: '', tipo: '' });
+const enviando = ref(false);
+const salvandoPonto = ref(false);
+const carregandoPontos = ref(true);
+const carregandoAcoes = ref(true);
+const filtroPonto = ref('');
+const paginacao = ref({ rowsPerPage: 10 });
+
+function avisar(tipo, message) {
+  $q.notify({
+    message,
+    color: 'white',
+    textColor: 'primary',
+    badgeColor: 'primary',
+    badgeTextColor: 'white',
+    classes: `pa-notify pa-notify--${tipo}`,
+    timeout: tipo === 'erro' ? 6000 : 3500,
+  });
+}
 
 const isHistory = computed(() => route.path === '/historico-acoes');
+
+const obrigatorio = (val) => !!val || 'Campo obrigatório';
+const naoNegativo = (val) => (val !== '' && val !== null && val >= 0) || 'Informe 0 ou mais';
 
 const pontosOptions = computed(() =>
   [...pontos.value]
@@ -264,6 +261,18 @@ const pontosOptions = computed(() =>
       value: ponto._id,
     }))
 )
+
+const pontosFiltrados = computed(() => {
+  const termo = filtroPonto.value.trim().toLowerCase();
+  if (!termo) return pontosOptions.value;
+  return pontosOptions.value.filter((opcao) => opcao.label.toLowerCase().includes(termo));
+})
+
+function filtrarPontos(val, update) {
+  update(() => {
+    filtroPonto.value = val;
+  });
+}
 
 const acoesComNomes = computed(() =>
   [...acoes.value]
@@ -281,15 +290,63 @@ const acoesComNomes = computed(() =>
 
 function formatDate(value) {
   if (!value) return '-';
+
+  const dataIso = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (dataIso) {
+    return `${dataIso[3]}/${dataIso[2]}/${dataIso[1]}`;
+  }
+
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('pt-BR');
+  return new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(date);
 }
 
+function formatarDataInput(date) {
+  const ano = date.getFullYear();
+  const mes = String(date.getMonth() + 1).padStart(2, '0');
+  const dia = String(date.getDate()).padStart(2, '0');
+  return `${ano}-${mes}-${dia}`;
+}
+
+const columns = [
+  {
+    name: 'pontoNome',
+    label: 'Ponto',
+    field: 'pontoNome',
+    align: 'left',
+  },
+  {
+    name: 'data',
+    label: 'Data',
+    field: 'data',
+    align: 'left',
+    format: (valor) => formatDate(valor),
+  },
+  {
+    name: 'leads',
+    label: 'Leads',
+    field: 'leads',
+    align: 'center',
+  },
+  {
+    name: 'vendas',
+    label: 'Vendas',
+    field: 'vendas',
+    align: 'center',
+  },
+  {
+    name: 'acoes',
+    label: '',
+    field: '_id',
+    align: 'right',
+  },
+];
+
 function resetForm() {
-  form.value = { pontoId: '', data: '', leads: 0, vendas: 0 };
+  form.value = { pontoId: '', data: hoje, leads: 0, vendas: 0 };
   addNewPonto.value = false;
   novoPonto.value = { nome: '', endereco: '', bairro: '', cidade: '', tipo: '' };
+  nextTick(() => formRef.value?.resetValidation());
 }
 
 function toggleAddPonto() {
@@ -300,13 +357,10 @@ function toggleAddPonto() {
 }
 
 async function salvarNovoPonto() {
-  if (!novoPonto.value.nome || !novoPonto.value.endereco || !novoPonto.value.bairro || !novoPonto.value.cidade || !novoPonto.value.tipo) {
-    $q.notify({ type: 'negative', message: 'Preencha todos os dados do novo ponto.' });
-    return;
-  }
+  salvandoPonto.value = true;
 
   try {
-    const response = await fetch('https://dashboardvendaexterna.onrender.com/pontos', {
+    const response = await apiFetch('/pontos', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(novoPonto.value),
@@ -321,46 +375,53 @@ async function salvarNovoPonto() {
     pontos.value.push(pontoCriado);
     form.value.pontoId = pontoCriado._id;
     addNewPonto.value = false;
-    $q.notify({ type: 'positive', message: 'Ponto criado com sucesso.' });
+    novoPonto.value = { nome: '', endereco: '', bairro: '', cidade: '', tipo: '' };
+    avisar('sucesso', 'Ponto criado com sucesso.');
   } catch (error) {
     console.error(error);
-    $q.notify({ type: 'negative', message: error.message || 'Erro ao criar o ponto.' });
+    avisar('erro', error.message || 'Erro ao criar o ponto.');
+  } finally {
+    salvandoPonto.value = false;
   }
 }
 
-function acaoBackgroundClass(vendas) {
+function vendasClass(vendas) {
   if (vendas === 0) {
-    return 'bg-red-2';
+    return 'pa-vendas--zero';
   }
   if (vendas >= 1 && vendas <= 4) {
-    return 'bg-yellow-2';
+    return 'pa-vendas--baixa';
   }
-  return 'bg-green-2';
+  return 'pa-vendas--boa';
 }
 
 async function carregarPontos() {
   try {
-    const response = await fetch('https://dashboardvendaexterna.onrender.com/pontos');
+    const response = await apiFetch('/pontos');
     if (!response.ok) {
       throw new Error('Falha ao carregar pontos');
     }
     pontos.value = await response.json();
   } catch (error) {
     console.error(error);
-    $q.notify({ type: 'negative', message: 'Não foi possível carregar a lista de pontos.' });
+    avisar('erro', 'Não foi possível carregar a lista de pontos.');
+  } finally {
+    carregandoPontos.value = false;
   }
 }
 
 async function carregarAcoes() {
   try {
-    const response = await fetch('https://dashboardvendaexterna.onrender.com/acoes');
+    const response = await apiFetch('/acoes');
     if (!response.ok) {
       throw new Error('Falha ao carregar histórico');
     }
     acoes.value = await response.json();
   } catch (error) {
     console.error(error);
-    $q.notify({ type: 'negative', message: 'Não foi possível carregar o histórico de ações.' });
+    avisar('erro', 'Não foi possível carregar o histórico de ações.');
+  } finally {
+    carregandoAcoes.value = false;
   }
 }
 function confirmarExclusao(id) {
@@ -382,58 +443,32 @@ function confirmarExclusao(id) {
 }
 async function excluirAcao(id){
     try {
-        const response = await fetch(`https://dashboardvendaexterna.onrender.com/acoes/${id}`, {
+        const response = await apiFetch(`/acoes/${id}`, {
         method: 'DELETE',
         });
         if (!response.ok) {
         throw new Error('Falha ao excluir ação');
         }
         acoes.value = acoes.value.filter((a) => a._id !== id);
-        $q.notify({ type: 'positive', message: 'Ação excluída com sucesso.' });
+        avisar('sucesso', 'Ação excluída com sucesso.');
     } catch (error) {
         console.error(error);
-        $q.notify({ type: 'negative', message: 'Não foi possível excluir a ação.' });
+        avisar('erro', 'Não foi possível excluir a ação.');
     }
 }
 
 async function enviarAcao() {
+  enviando.value = true;
+
   try {
-    if (!form.value.pontoId && !addNewPonto.value) {
-      throw new Error('Selecione um ponto ou adicione um novo ponto');
-    }
-
-    let pontoId = form.value.pontoId;
-
-    if (addNewPonto.value) {
-      if (!novoPonto.value.nome || !novoPonto.value.endereco || !novoPonto.value.bairro || !novoPonto.value.cidade || !novoPonto.value.tipo) {
-        throw new Error('Preencha todos os dados do novo ponto');
-      }
-
-      const pontoResponse = await fetch('https://dashboardvendaexterna.onrender.com/pontos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(novoPonto.value),
-      });
-
-      if (!pontoResponse.ok) {
-        const error = await pontoResponse.json();
-        throw new Error(error.error || 'Erro ao criar o ponto');
-      }
-
-      const pontoCriado = await pontoResponse.json();
-      pontos.value.push(pontoCriado);
-      pontoId = pontoCriado._id;
-      form.value.pontoId = pontoCriado._id;
-    }
-
     const payload = {
-      pontoId,
+      pontoId: form.value.pontoId,
       data: form.value.data,
       leads: Number(form.value.leads),
       vendas: Number(form.value.vendas),
     };
 
-    const response = await fetch('https://dashboardvendaexterna.onrender.com/acoes', {
+    const response = await apiFetch('/acoes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -446,11 +481,13 @@ async function enviarAcao() {
 
     const novaAcao = await response.json();
     acoes.value.push(novaAcao);
-    $q.notify({ type: 'positive', message: 'Ação registrada com sucesso.' });
+    avisar('sucesso', 'Ação registrada com sucesso.');
     resetForm();
   } catch (error) {
     console.error(error);
-    $q.notify({ type: 'negative', message: error.message || 'Erro ao enviar ação.' });
+    avisar('erro', error.message || 'Erro ao enviar ação.');
+  } finally {
+    enviando.value = false;
   }
 }
 
@@ -461,15 +498,123 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.q-page {
-  min-height: 100vh;
+.pa-page,
+.pa-dialog {
+  --pa-navy: #0B3C5D;
+  --pa-orange: #FF7A1A;
+  --pa-borda: #E3E8EE;
+  --pa-suave: #5F6B7A;
+  --pa-bom: #2E7D32;
+  --pa-alerta: #B26A00;
+  --pa-ruim: #C62828;
 }
 
-.rounded-borders {
-  border-radius: 16px;
+.pa-page {
+  background: #F4F6F9;
 }
 
-.transition-all {
-  transition: all 0.3s ease;
+.pa-container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+}
+
+.pa-container--larga {
+  max-width: 1000px;
+}
+
+.pa-header {
+  margin-bottom: 28px;
+}
+
+.pa-title {
+  margin: 0;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--pa-navy);
+}
+
+.pa-title::after {
+  content: '';
+  display: block;
+  width: 48px;
+  height: 4px;
+  margin-top: 12px;
+  border-radius: 2px;
+  background: var(--pa-orange);
+}
+
+.pa-subtitle {
+  margin: 12px 0 0;
+  color: var(--pa-suave);
+}
+
+.pa-card {
+  padding: 24px;
+  background: #fff;
+  border: 1px solid var(--pa-borda);
+  border-radius: 12px;
+}
+
+.pa-card--tabela {
+  padding: 0;
+  overflow: hidden;
+}
+
+.pa-tabela-topo {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--pa-borda);
+}
+
+.pa-dialog {
+  width: 100%;
+  max-width: 560px;
+  border-radius: 12px;
+}
+
+.pa-secao-titulo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--pa-navy);
+}
+
+.pa-label {
+  font-size: 0.8125rem;
+  color: var(--pa-suave);
+}
+
+.pa-ponto-nome {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--pa-navy);
+}
+
+.pa-vendas {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.pa-vendas--zero {
+  color: var(--pa-ruim);
+  font-weight: 700;
+}
+
+.pa-vendas--baixa {
+  color: var(--pa-alerta);
+  font-weight: 700;
+}
+
+.pa-vendas--boa {
+  color: var(--pa-bom);
+  font-weight: 700;
+}
+
+.pa-card--tabela :deep(.pa-thead th) {
+  font-weight: 700;
+  font-size: 0.8125rem;
+  color: var(--pa-navy);
+  background: #F8FAFC;
 }
 </style>

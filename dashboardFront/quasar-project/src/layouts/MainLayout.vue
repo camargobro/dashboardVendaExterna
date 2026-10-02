@@ -1,64 +1,214 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
-    <q-header elevated class="bg-white text-primary">
-      <q-toolbar class="q-pl-md q-pr-md justify-center">
-        <div class="row items-center no-wrap q-gutter-x-md">
-          <q-btn
-            flat
-            round
-            dense
-            :color="isActive('/') ? 'primary' : 'grey-7'"
-            label="HOME"
-            class="q-mx-xs hover:shadow-3 hover:scale-110 transition-all"
-            @click="go('/')"
-          />
-          <q-btn
-            flat
-            round
-            dense
-            :color="isActive('/criar-acao') ? 'primary' : 'grey-7'"
-            label="REGISTRAR AÇÃO"
-            class="q-mx-xs hover:shadow-3 hover:scale-110 transition-all"
-            @click="go('/criar-acao')"
-          />
-          <q-btn
-            flat
-            round
-            dense
-            :color="isActive('/historico-acoes') ? 'primary' : 'grey-7'"
-            label="HISTÓRICO DE AÇÕES"
-            class="q-mx-xs hover:shadow-3 hover:scale-110 transition-all"
-            @click="go('/historico-acoes')"
-          />
-        </div>
+  <q-layout view="lHh Lpr lFf" class="pa-layout">
+
+    <q-header v-if="$q.screen.lt.md" bordered class="bg-white text-primary">
+      <q-toolbar>
+        <q-btn flat round dense icon="menu" aria-label="Abrir menu" @click="drawer = !drawer" />
+        <div class="pa-marca q-ml-sm">Ponto<span>Alvo</span></div>
       </q-toolbar>
     </q-header>
+
+    <q-drawer
+      v-model="drawer"
+      side="left"
+      show-if-above
+      bordered
+      :width="256"
+      class="bg-white"
+    >
+      <div class="pa-drawer">
+
+        <div class="pa-logo">
+          <svg viewBox="0 0 640 160" role="img" aria-label="PontoAlvo" xmlns="http://www.w3.org/2000/svg">
+            <path d="M70 150C70 150 20 100 20 70A50 50 0 1 1 120 70C120 100 70 150 70 150Z" fill="#0B3C5D" />
+            <circle cx="70" cy="70" r="28" fill="#FFFFFF" />
+            <circle cx="70" cy="70" r="18" fill="#FF7A1A" />
+            <circle cx="70" cy="70" r="8" fill="#FFFFFF" />
+            <text
+              x="145"
+              y="98"
+              font-family="Poppins, 'Segoe UI', Roboto, Arial, sans-serif"
+              font-size="68"
+              font-weight="700"
+              letter-spacing="-1"
+            >
+              <tspan fill="#0B3C5D">Ponto</tspan><tspan fill="#FF7A1A">Alvo</tspan>
+            </text>
+          </svg>
+        </div>
+
+        <q-list class="pa-menu">
+          <q-item
+            v-for="item in menu"
+            :key="item.path"
+            clickable
+            :active="isActive(item.path)"
+            active-class="pa-nav-ativo"
+            class="pa-nav"
+            @click="go(item.path)"
+          >
+            <q-item-section>{{ item.label }}</q-item-section>
+          </q-item>
+        </q-list>
+
+        <div class="pa-conta">
+          <div class="pa-conta-nome">{{ usuario?.nome || 'Conta conectada' }}</div>
+          <q-item clickable class="pa-nav pa-sair" @click="sair">
+            <q-item-section>
+              <div class="pa-sair-conteudo">
+                <q-icon name="logout" size="18px" />
+                <span>Sair</span>
+              </div>
+            </q-item-section>
+          </q-item>
+        </div>
+
+      </div>
+    </q-drawer>
 
     <q-page-container>
       <router-view />
     </q-page-container>
+
   </q-layout>
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import { useQuasar } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
+import { clearSession, getUser } from 'src/services/auth'
 
+const $q = useQuasar()
 const router = useRouter()
 const route = useRoute()
+
+const drawer = ref(false)
+const usuario = getUser()
+
+const menu = [
+  { label: 'Home', path: '/' },
+  { label: 'Registrar ação', path: '/criar-acao' },
+  { label: 'Histórico de ações', path: '/historico-acoes' }
+]
 
 function go (path) {
   if (route.path !== path) {
     router.push(path)
+  }
+  if ($q.screen.lt.md) {
+    drawer.value = false
   }
 }
 
 function isActive (path) {
   return route.path === path
 }
+
+function sair () {
+  clearSession()
+  router.replace('/login')
+}
 </script>
 
 <style scoped>
-.transition-all {
-  transition: all 0.3s ease;
+.pa-layout {
+  --pa-navy: #0B3C5D;
+  --pa-orange: #FF7A1A;
+  --pa-suave: #5F6B7A;
+}
+
+.pa-marca {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--pa-navy);
+}
+
+.pa-marca span {
+  color: var(--pa-orange);
+}
+
+.pa-drawer {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  padding: 28px 16px;
+  box-sizing: border-box;
+}
+
+.pa-logo {
+  padding: 0 8px 28px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #E3E8EE;
+}
+
+.pa-logo svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.pa-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pa-conta {
+  margin-top: auto;
+  padding: 18px 12px 0;
+  border-top: 1px solid #E3E8EE;
+}
+
+.pa-conta-nome {
+  overflow: hidden;
+  color: var(--pa-navy);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pa-sair {
+  margin-top: 8px;
+  color: var(--pa-suave);
+}
+
+.pa-sair-conteudo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pa-nav {
+  position: relative;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 8px;
+  font-weight: 500;
+  color: var(--pa-suave);
+}
+
+.pa-nav:hover {
+  background: #F4F6F9;
+  color: var(--pa-navy);
+}
+
+.pa-nav-ativo {
+  background: rgba(11, 60, 93, 0.08);
+  font-weight: 700;
+  color: var(--pa-navy);
+}
+
+.pa-nav-ativo::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--pa-orange);
 }
 </style>

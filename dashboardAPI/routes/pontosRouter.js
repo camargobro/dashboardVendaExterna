@@ -1,10 +1,12 @@
 import express from 'express';
 import { criarPontos, buscarPontos } from '../controller/pontosController.js';
-import { autenticar } from '../middlewares/autenticacaoUsuario.js'
+import { autenticar, somenteAdmin } from '../middlewares/autenticacaoUsuario.js'
 
 var router = express.Router();
 
 /* GET users listing. */
-router.get('/', autenticar, buscarPontos);
-router.post('/', autenticar, criarPontos);
+router.use(autenticar, somenteAdmin);
+
+router.get('/', buscarPontos);
+router.post('/', criarPontos);
 export default router;
