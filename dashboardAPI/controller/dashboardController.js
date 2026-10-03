@@ -31,6 +31,7 @@ export async function baixarRankingXlsx(req, res) {
 
         sheet.columns = [
             { header: 'Nome', key: 'nome', width: 32 },
+            { header: 'Telefone', key: 'telefone', width: 20 },
             { header: 'Endereco', key: 'endereco', width: 40 },
             { header: 'Bairro', key: 'bairro', width: 20 },
             { header: 'Cidade', key: 'cidade', width: 20 },
@@ -44,6 +45,7 @@ export async function baixarRankingXlsx(req, res) {
         rows.forEach(r => {
             sheet.addRow({
                 nome: r.nome,
+                telefone: r.telefone,
                 endereco: r.endereco,
                 bairro: r.bairro,
                 cidade: r.cidade,

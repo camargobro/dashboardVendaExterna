@@ -18,7 +18,10 @@
         <div v-for="item in resumo" :key="item.label" class="col-12 col-sm-4">
           <div class="pa-card">
             <div class="pa-label">{{ item.label }}</div>
-            <div class="pa-numero">{{ carregando ? '—' : item.valor }}</div>
+            <div class="pa-numero">
+              <q-skeleton v-if="carregando" type="text" width="96px" height="34px" />
+              <span v-else>{{ item.valor }}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -31,32 +34,42 @@
 
             <div class="row items-start justify-between no-wrap q-col-gutter-md">
               <div class="col">
-                <div class="pa-ponto-nome">
-                  {{ d.ponto.nome || (carregando ? 'Carregando...' : 'Sem dados') }}
-                </div>
-                <div class="pa-label">
-                  {{ d.ponto.endereco || 'Endereço não informado' }}
-                </div>
+                <template v-if="carregando">
+                  <q-skeleton type="text" width="68%" height="22px" />
+                  <q-skeleton type="text" width="90%" />
+                  <q-skeleton type="text" width="52%" />
+                </template>
+                <template v-else>
+                  <div class="pa-ponto-nome">{{ d.ponto.nome || 'Sem dados' }}</div>
+                  <div class="pa-label">{{ d.ponto.endereco || 'Endereço não informado' }}</div>
+                  <div class="pa-label">{{ d.ponto.telefone || 'Telefone não informado' }}</div>
+                </template>
               </div>
 
               <div class="col-auto text-right">
-                <div class="pa-media">{{ formatarDecimal(d.ponto.mediaVendas) }}</div>
-                <div class="pa-label">vendas/visita</div>
+                <q-skeleton v-if="carregando" type="text" width="72px" height="36px" />
+                <template v-else>
+                  <div class="pa-media">{{ formatarDecimal(d.ponto.mediaVendas) }}</div>
+                  <div class="pa-label">vendas/visita</div>
+                </template>
               </div>
             </div>
 
             <div class="row pa-stats">
               <div class="col-4">
                 <div class="pa-label">Visitas</div>
-                <div class="pa-stat">{{ formatarInteiro(d.ponto.totalVisitas) }}</div>
+                <q-skeleton v-if="carregando" type="text" width="36px" height="24px" />
+                <div v-else class="pa-stat">{{ formatarInteiro(d.ponto.totalVisitas) }}</div>
               </div>
               <div class="col-4">
                 <div class="pa-label">Vendas</div>
-                <div class="pa-stat">{{ formatarInteiro(d.ponto.totalVendas) }}</div>
+                <q-skeleton v-if="carregando" type="text" width="36px" height="24px" />
+                <div v-else class="pa-stat">{{ formatarInteiro(d.ponto.totalVendas) }}</div>
               </div>
               <div class="col-4">
                 <div class="pa-label">Leads</div>
-                <div class="pa-stat">{{ formatarInteiro(d.ponto.totalLeads) }}</div>
+                <q-skeleton v-if="carregando" type="text" width="36px" height="24px" />
+                <div v-else class="pa-stat">{{ formatarInteiro(d.ponto.totalLeads) }}</div>
               </div>
             </div>
 
@@ -80,11 +93,31 @@
           />
         </div>
 
+        <div v-if="carregando" class="pa-ranking-skeleton" aria-label="Carregando ranking" aria-busy="true">
+          <div class="pa-ranking-skeleton__row pa-ranking-skeleton__row--head">
+            <q-skeleton type="text" width="22px" />
+            <q-skeleton type="text" width="52px" />
+            <q-skeleton type="text" width="52px" />
+            <q-skeleton type="text" width="90px" />
+            <q-skeleton type="text" width="82px" />
+          </div>
+          <div v-for="linha in 5" :key="linha" class="pa-ranking-skeleton__row">
+            <q-skeleton type="text" width="22px" />
+            <div class="pa-ranking-skeleton__point">
+              <q-skeleton type="text" width="52%" />
+              <q-skeleton type="text" width="72%" />
+            </div>
+            <q-skeleton type="text" width="32px" />
+            <q-skeleton type="text" width="112px" height="12px" />
+            <q-skeleton type="text" width="44px" />
+          </div>
+        </div>
+
         <q-table
+          v-else
           v-model:pagination="pagination"
           :rows="ranking"
           :columns="columns"
-          :loading="carregando"
           :rows-per-page-options="[10, 25, 50, 0]"
           rows-per-page-label="Linhas por página"
           no-data-label="Nenhum ponto encontrado"
@@ -104,6 +137,7 @@
             <q-td :props="props">
               <div class="pa-ponto-nome">{{ props.row.nome }}</div>
               <div class="pa-label">{{ props.row.endereco }}</div>
+              <div class="pa-label">{{ props.row.telefone || 'Telefone não informado' }}</div>
             </q-td>
           </template>
 
@@ -129,7 +163,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { apiFetch } from 'src/services/api'
 
 const totalVendas = ref(0)
@@ -145,6 +179,7 @@ const carregando = ref(true)
 const erro = ref(false)
 
 const pagination = ref({ rowsPerPage: 10 })
+let contagemFrame = null
 
 function formatarInteiro(valor) {
   return Number(valor || 0).toLocaleString('pt-BR')
@@ -175,6 +210,48 @@ const maiorMedia = computed(() =>
 function larguraBarra(valor) {
   if (!maiorMedia.value) return '0%'
   return `${(valor / maiorMedia.value) * 100}%`
+}
+
+function animarTotais(data) {
+  const alvos = {
+    acoes: Number(data.totalAcoes || 0),
+    vendas: Number(data.totalVendas || 0),
+    leads: Number(data.totalLeads || 0)
+  }
+
+  if (contagemFrame !== null) cancelAnimationFrame(contagemFrame)
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    totalAcoes.value = alvos.acoes
+    totalVendas.value = alvos.vendas
+    totalLeads.value = alvos.leads
+    return
+  }
+
+  const iniciais = {
+    acoes: totalAcoes.value,
+    vendas: totalVendas.value,
+    leads: totalLeads.value
+  }
+  const inicio = performance.now()
+  const duracao = 760
+
+  function atualizarContagem(agora) {
+    const progresso = Math.min((agora - inicio) / duracao, 1)
+    const suavizado = 1 - (1 - progresso) ** 3
+
+    totalAcoes.value = Math.round(iniciais.acoes + (alvos.acoes - iniciais.acoes) * suavizado)
+    totalVendas.value = Math.round(iniciais.vendas + (alvos.vendas - iniciais.vendas) * suavizado)
+    totalLeads.value = Math.round(iniciais.leads + (alvos.leads - iniciais.leads) * suavizado)
+
+    if (progresso < 1) {
+      contagemFrame = requestAnimationFrame(atualizarContagem)
+    } else {
+      contagemFrame = null
+    }
+  }
+
+  contagemFrame = requestAnimationFrame(atualizarContagem)
 }
 
 const columns = [
@@ -228,9 +305,7 @@ async function buscarDados() {
 
     const dataDashboard = await responseDashboard.json()
 
-    totalVendas.value = dataDashboard.totalVendas
-    totalAcoes.value = dataDashboard.totalAcoes
-    totalLeads.value = dataDashboard.totalLeads
+    animarTotais(dataDashboard)
 
     if (responseRanking.ok) {
 
@@ -242,6 +317,7 @@ async function buscarDados() {
         nome: item.nome,
 
         endereco: item.endereco || 'Endereço não informado',
+        telefone: item.telefone || 'Telefone não informado',
 
         visitas: item.totalVisitas,
 
@@ -267,6 +343,10 @@ async function buscarDados() {
 
 onMounted(() => {
   buscarDados()
+})
+
+onBeforeUnmount(() => {
+  if (contagemFrame !== null) cancelAnimationFrame(contagemFrame)
 })
 
 async function baixarRanking() {
@@ -448,6 +528,52 @@ async function baixarRanking() {
   height: 100%;
   background: var(--pa-orange);
   border-radius: 4px;
+  transform-origin: left;
+  animation: pa-barra-entrada 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes pa-barra-entrada {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.pa-ranking-skeleton {
+  padding: 0 24px 8px;
+}
+
+.pa-ranking-skeleton__row {
+  display: grid;
+  grid-template-columns: 32px minmax(160px, 2fr) minmax(60px, 0.8fr) minmax(110px, 1.3fr) minmax(70px, 1fr);
+  align-items: center;
+  gap: 16px;
+  min-height: 58px;
+  border-top: 1px solid var(--pa-borda);
+}
+
+.pa-ranking-skeleton__row--head {
+  min-height: 44px;
+  border-top: 0;
+}
+
+.pa-ranking-skeleton__point {
+  display: grid;
+  gap: 3px;
+}
+
+@media (max-width: 700px) {
+  .pa-ranking-skeleton__row {
+    grid-template-columns: 24px minmax(110px, 1fr) 44px minmax(90px, 1fr);
+  }
+
+  .pa-ranking-skeleton__row > :last-child {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pa-barra-fill {
+    animation: none;
+  }
 }
 
 .pa-barra-valor {

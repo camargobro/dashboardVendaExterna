@@ -19,3 +19,29 @@
 .q-notification.pa-notify--erro {
   border-left-color: $negative;
 }
+
+.q-notification.pa-notify--info {
+  border-left-color: $secondary;
+}
+
+.pa-route-enter-active,
+.pa-route-leave-active {
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.pa-route-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.pa-route-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pa-route-enter-active,
+  .pa-route-leave-active {
+    transition: none;
+  }
+}

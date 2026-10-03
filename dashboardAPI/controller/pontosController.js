@@ -14,9 +14,9 @@ export async function buscarPontos(req, res) {
 
 export async function criarPontos(req, res) {
     try {
-        const { nome, endereco, bairro, cidade, tipo } = req.body;
+        const { nome, telefone, endereco, bairro, cidade, tipo } = req.body;
 
-        if (!nome || !endereco || !bairro || !cidade || !tipo) {
+        if (!nome || !telefone || !endereco || !bairro || !cidade || !tipo) {
             return res.status(400).json({ error: "Todos os campos são obrigatórios" });
         }
 
@@ -26,7 +26,7 @@ export async function criarPontos(req, res) {
             return res.status(409).json({ error: "Ponto com esse nome e endereço já existe" });
         }
 
-        const novoPonto = await postPonto({ nome, endereco, bairro, cidade, tipo, empresaId: req.empresaId });
+        const novoPonto = await postPonto({ nome, telefone, endereco, bairro, cidade, tipo, empresaId: req.empresaId });
 
         if (!novoPonto) {
             return res.status(400).json({ error: "Erro ao criar ponto" });

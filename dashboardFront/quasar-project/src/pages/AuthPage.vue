@@ -15,10 +15,14 @@
       <div class="auth-form-wrap">
         <div class="mobile-brand">Ponto<span>Alvo</span></div>
         <div class="auth-eyebrow">ÁREA DA EQUIPE</div>
-        <h1>{{ isRegister ? 'Crie a conta de sua empresa' : 'Bem-vindo de volta' }}</h1>
-        <p class="auth-intro">
-          {{ isRegister ? 'Comece a acompanhar sua operação.' : 'Acesse sua operação de vendas.' }}
-        </p>
+        <Transition name="auth-copy" mode="out-in">
+          <div :key="isRegister ? 'register-copy' : 'login-copy'">
+            <h1>{{ isRegister ? 'Crie a conta de sua empresa' : 'Bem-vindo de volta' }}</h1>
+            <p class="auth-intro">
+              {{ isRegister ? 'Comece a acompanhar sua operação.' : 'Acesse sua operação de vendas.' }}
+            </p>
+          </div>
+        </Transition>
 
         <q-btn-toggle
           v-model="modoSelecionado"
@@ -34,7 +38,14 @@
           @update:model-value="alterarModo"
         />
 
-        <q-form ref="formRef" class="auth-form" @submit.prevent="enviarFormulario">
+        <Transition name="auth-form-transition" mode="out-in">
+          <q-form
+            :key="isRegister ? 'register-form' : 'login-form'"
+            ref="formRef"
+            class="auth-form"
+            :class="{ 'auth-form--erro': erro }"
+            @submit.prevent="enviarFormulario"
+          >
           <q-input
             v-if="isRegister"
             v-model.trim="form.nome"
@@ -42,6 +53,15 @@
             autocomplete="name"
             outlined
             :rules="[obrigatorio]"
+          />
+          <q-input
+            v-if="isRegister"
+            v-model.trim="form.cnpj"
+            label="CNPJ da empresa"
+            maxlength="18"
+            autocomplete="off"
+            outlined
+            :rules="[obrigatorio, validarCnpj]"
           />
           <q-input
             v-model.trim="form.email"
@@ -80,7 +100,9 @@
             :rules="[obrigatorio, confirmarSenha]"
           />
 
-          <q-banner v-if="erro" class="auth-error" rounded>{{ erro }}</q-banner>
+          <Transition name="auth-error">
+            <q-banner v-if="erro" class="auth-error" rounded>{{ erro }}</q-banner>
+          </Transition>
 
           <q-btn
             class="auth-submit"
@@ -91,7 +113,8 @@
             :loading="enviando"
             :label="isRegister ? 'Criar minha conta' : 'Entrar na conta'"
           />
-        </q-form>
+          </q-form>
+        </Transition>
 
         <p class="auth-switch">
           {{ isRegister ? 'Já tem uma conta?' : 'Ainda não tem uma conta?' }}
@@ -111,6 +134,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { apiUrl } from 'src/services/api'
 import { saveSession } from 'src/services/auth'
+import { notificar } from 'src/services/notificacoes'
 
 const route = useRoute()
 const router = useRouter()
@@ -121,7 +145,7 @@ const mostrarSenha = ref(false)
 const enviando = ref(false)
 const erro = ref('')
 const formRef = ref(null)
-const form = reactive({ nome: '', email: '', senha: '', confirmacao: '' })
+const form = reactive({ nome: '', cnpj: '', email: '', senha: '', confirmacao: '' })
 
 watch(isRegister, async (value) => {
   modoSelecionado.value = value ? 'cadastro' : 'login'
@@ -132,6 +156,7 @@ watch(isRegister, async (value) => {
 
 const obrigatorio = (value) => !!value || 'Este campo é obrigatório.'
 const validarEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) || 'Informe um e-mail válido.'
+const validarCnpj = (value) => String(value || '').replace(/[^a-z0-9]/gi, '').length === 14 || 'Informe um CNPJ com 14 caracteres.'
 const validarSenha = (value) => !isRegister.value || value.length >= 8 || 'Use ao menos 8 caracteres.'
 const confirmarSenha = (value) => value === form.senha || 'As senhas não coincidem.'
 
@@ -148,7 +173,7 @@ async function enviarFormulario () {
     const cadastro = isRegister.value
     const endpoint = cadastro ? '/usuario/registrar' : '/usuario/login'
     const body = cadastro
-      ? { nome: form.nome, email: form.email, senha: form.senha }
+      ? { nome: form.nome, cnpj: form.cnpj, email: form.email, senha: form.senha }
       : { email: form.email, senha: form.senha }
     const response = await fetch(apiUrl(endpoint), {
       method: 'POST',
@@ -162,14 +187,14 @@ async function enviarFormulario () {
     if (cadastro) {
       form.senha = ''
       form.confirmacao = ''
-      $q.notify({ type: 'positive', message: 'Conta criada. Faça login para acessar.' })
+      notificar($q, 'sucesso', 'Conta criada. Faça login para acessar.')
       alterarModo('login')
       return
     }
 
     saveSession(data)
-    $q.notify({ type: 'positive', message: 'Login realizado com sucesso.' })
-    const destino = typeof route.query.redirect === 'string' ? route.query.redirect : '/'
+    notificar($q, 'sucesso', 'Login realizado com sucesso.')
+    const destino = typeof route.query.redirect === 'string' ? route.query.redirect : '/app'
     await router.replace(destino)
   } catch (error) {
     erro.value = error.message || 'Não foi possível conectar ao servidor.'
@@ -226,6 +251,17 @@ h1 { margin: 0; color: var(--navy); font-size: 2rem; line-height: 1.2; font-weig
 .auth-toggle :deep(.q-btn) { min-height: 42px; border-radius: 6px; }
 .auth-toggle :deep(.q-btn--active) { box-shadow: 0 2px 6px rgba(11, 60, 93, .16); }
 .auth-form { display: flex; flex-direction: column; gap: 4px; }
+.auth-copy-enter-active, .auth-copy-leave-active,
+.auth-form-transition-enter-active, .auth-form-transition-leave-active,
+.auth-error-enter-active, .auth-error-leave-active { transition: opacity 180ms ease, transform 180ms ease; }
+.auth-copy-enter-from, .auth-form-transition-enter-from, .auth-error-enter-from { opacity: 0; transform: translateY(8px); }
+.auth-copy-leave-to, .auth-form-transition-leave-to, .auth-error-leave-to { opacity: 0; transform: translateY(-5px); }
+.auth-form--erro { animation: auth-shake 360ms ease-in-out; }
+@keyframes auth-shake {
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+  0%, 100% { transform: translateX(0); }
+}
 .auth-form :deep(.q-field--outlined .q-field__control) { border-radius: 6px; }
 .auth-error { margin: 2px 0 10px; background: #fff0ed; color: #9f3022; }
 .auth-submit { width: 100%; min-height: 48px; margin-top: 8px; border-radius: 6px; font-weight: 700; }
@@ -233,6 +269,13 @@ h1 { margin: 0; color: var(--navy); font-size: 2rem; line-height: 1.2; font-weig
 .auth-switch button { border: 0; padding: 4px; background: transparent; color: var(--navy); font: inherit; font-weight: 700; cursor: pointer; }
 .auth-switch button:hover { color: var(--orange); }
 .auth-footer { margin-top: auto; padding-top: 32px; color: #82909a; font-size: 0.78rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-copy-enter-active, .auth-copy-leave-active,
+  .auth-form-transition-enter-active, .auth-form-transition-leave-active,
+  .auth-error-enter-active, .auth-error-leave-active { transition: none; }
+  .auth-form--erro { animation: none; }
+}
 
 @media (max-width: 760px) {
   .auth-page { grid-template-columns: 1fr; }

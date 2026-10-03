@@ -1,14 +1,16 @@
 const routes = [
+  { path: '/', component: () => import('pages/landingPage.vue') },
   { path: '/login', component: () => import('pages/AuthPage.vue'), meta: { guestOnly: true } },
   { path: '/cadastro', component: () => import('pages/AuthPage.vue'), meta: { guestOnly: true } },
   {
-    path: '/',
+    path: '/app',
     component: () => import('layouts/MainLayout.vue'),
     meta: { requiresAuth: true },
     children: [
       { path: '', component: () => import('pages/IndexPage.vue') },
       { path: 'criar-acao', component: () => import('pages/criarAcaoPage.vue') },
-      { path: 'historico-acoes', component: () => import('pages/criarAcaoPage.vue') }
+      { path: 'historico-acoes', component: () => import('pages/criarAcaoPage.vue') },
+      { path: 'pontos', component: () => import('pages/pontosPage.vue') }
     ]
   },
 

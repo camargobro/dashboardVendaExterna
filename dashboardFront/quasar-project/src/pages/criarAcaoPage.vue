@@ -118,6 +118,9 @@
                     <q-input v-model="novoPonto.nome" :rules="[obrigatorio]" label="Nome do ponto" lazy-rules outlined />
                   </div>
                   <div class="col-12 col-sm-4">
+                    <q-input v-model="novoPonto.telefone" :rules="[obrigatorio]" label="Telefone" type="tel" lazy-rules outlined />
+                  </div>
+                  <div class="col-12 col-sm-4">
                     <q-input v-model="novoPonto.tipo" :rules="[obrigatorio]" label="Tipo" lazy-rules outlined />
                   </div>
                   <div class="col-12">
@@ -168,7 +171,7 @@
             v-model:pagination="paginacao"
             :rows="acoesComNomes"
             :columns="columns"
-            :loading="carregandoAcoes"
+            :loading="carregandoAcoes || carregandoPontos"
             :rows-per-page-options="[10, 25, 50, 0]"
             rows-per-page-label="Linhas por página"
             no-data-label="Nenhuma ação registrada ainda."
@@ -182,6 +185,7 @@
               <q-td :props="props">
                 <div class="pa-ponto-nome">{{ props.row.pontoNome }}</div>
                 <div class="pa-label">{{ props.row.endereco }}</div>
+                <div class="pa-label">{{ props.row.telefone }}</div>
               </q-td>
             </template>
 
@@ -195,12 +199,8 @@
 
             <template v-slot:body-cell-acoes="props">
               <q-td :props="props">
-                <q-btn
-                  flat
-                  dense
-                  no-caps
-                  color="negative"
-                  label="Excluir"
+                <DeleteButton
+                  label="Excluir ação"
                   @click="confirmarExclusao(props.row._id)"
                 />
               </q-td>
@@ -211,24 +211,40 @@
       </div>
 
     </div>
+
+    <ConfirmDialog
+      v-model="dialogExclusao"
+      icon="delete_outline"
+      title="Excluir ação?"
+      message="Esta ação será removida do histórico e não poderá ser recuperada."
+      confirm-label="Excluir"
+      intent="danger"
+      @confirm="executarExclusao"
+    />
   </q-page>
 </template>
 
 <script setup>
 import { ref, computed, nextTick, onMounted } from 'vue';
+import ConfirmDialog from 'src/components/ConfirmDialog.vue';
+import DeleteButton from 'src/components/DeleteButton.vue';
 import { useQuasar } from 'quasar';
 import { useRoute } from 'vue-router';
 import { apiFetch } from 'src/services/api';
+import { notificar } from 'src/services/notificacoes';
 
 const $q = useQuasar();
 const route = useRoute();
 const acoes = ref([]);
 const pontos = ref([]);
+const erroPontos = ref(false);
+const dialogExclusao = ref(false);
+const acaoSelecionada = ref(null);
 const hoje = formatarDataInput(new Date());
 const form = ref({ pontoId: '', data: hoje, leads: 0, vendas: 0 });
 const formRef = ref(null);
 const addNewPonto = ref(false);
-const novoPonto = ref({ nome: '', endereco: '', bairro: '', cidade: '', tipo: '' });
+const novoPonto = ref({ nome: '', telefone: '', endereco: '', bairro: '', cidade: '', tipo: '' });
 const enviando = ref(false);
 const salvandoPonto = ref(false);
 const carregandoPontos = ref(true);
@@ -237,18 +253,10 @@ const filtroPonto = ref('');
 const paginacao = ref({ rowsPerPage: 10 });
 
 function avisar(tipo, message) {
-  $q.notify({
-    message,
-    color: 'white',
-    textColor: 'primary',
-    badgeColor: 'primary',
-    badgeTextColor: 'white',
-    classes: `pa-notify pa-notify--${tipo}`,
-    timeout: tipo === 'erro' ? 6000 : 3500,
-  });
+  notificar($q, tipo, message);
 }
 
-const isHistory = computed(() => route.path === '/historico-acoes');
+const isHistory = computed(() => route.path === '/app/historico-acoes');
 
 const obrigatorio = (val) => !!val || 'Campo obrigatório';
 const naoNegativo = (val) => (val !== '' && val !== null && val >= 0) || 'Informe 0 ou mais';
@@ -257,7 +265,7 @@ const pontosOptions = computed(() =>
   [...pontos.value]
     .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
     .map((ponto) => ({
-      label: `${ponto.nome} — ${ponto.endereco}`,
+      label: `${ponto.nome} — ${ponto.endereco} — ${ponto.telefone || 'Telefone não informado'}`,
       value: ponto._id,
     }))
 )
@@ -274,8 +282,14 @@ function filtrarPontos(val, update) {
   });
 }
 
-const acoesComNomes = computed(() =>
-  [...acoes.value]
+const acoesComNomes = computed(() => {
+  const acoesComPonto = erroPontos.value
+    ? acoes.value
+    : acoes.value.filter((acao) =>
+      pontos.value.some((ponto) => String(ponto._id) === String(acao.pontoId))
+    );
+
+  return [...acoesComPonto]
     .sort((a, b) => new Date(b.data) - new Date(a.data))
     .map((acao) => {
       const ponto = pontos.value.find((p) => p._id === acao.pontoId) || {}
@@ -284,9 +298,10 @@ const acoesComNomes = computed(() =>
         ...acao,
         pontoNome: ponto.nome || `ID: ${acao.pontoId}`,
         endereco: ponto.endereco || 'Endereço não encontrado',
+        telefone: ponto.telefone || 'Telefone não informado',
       }
     })
-)
+})
 
 function formatDate(value) {
   if (!value) return '-';
@@ -345,7 +360,7 @@ const columns = [
 function resetForm() {
   form.value = { pontoId: '', data: hoje, leads: 0, vendas: 0 };
   addNewPonto.value = false;
-  novoPonto.value = { nome: '', endereco: '', bairro: '', cidade: '', tipo: '' };
+  novoPonto.value = { nome: '', telefone: '', endereco: '', bairro: '', cidade: '', tipo: '' };
   nextTick(() => formRef.value?.resetValidation());
 }
 
@@ -375,7 +390,7 @@ async function salvarNovoPonto() {
     pontos.value.push(pontoCriado);
     form.value.pontoId = pontoCriado._id;
     addNewPonto.value = false;
-    novoPonto.value = { nome: '', endereco: '', bairro: '', cidade: '', tipo: '' };
+    novoPonto.value = { nome: '', telefone: '', endereco: '', bairro: '', cidade: '', tipo: '' };
     avisar('sucesso', 'Ponto criado com sucesso.');
   } catch (error) {
     console.error(error);
@@ -396,6 +411,8 @@ function vendasClass(vendas) {
 }
 
 async function carregarPontos() {
+  erroPontos.value = false;
+
   try {
     const response = await apiFetch('/pontos');
     if (!response.ok) {
@@ -403,6 +420,7 @@ async function carregarPontos() {
     }
     pontos.value = await response.json();
   } catch (error) {
+    erroPontos.value = true;
     console.error(error);
     avisar('erro', 'Não foi possível carregar a lista de pontos.');
   } finally {
@@ -425,21 +443,15 @@ async function carregarAcoes() {
   }
 }
 function confirmarExclusao(id) {
-  $q.dialog({
-    title: 'Confirmar exclusão',
-    message: 'Você tem certeza que deseja excluir esta ação?',
-    persistent: true,
-    ok: {
-      label: 'Excluir',
-      color: 'negative'
-    },
-    cancel: {
-      label: 'Cancelar',
-      flat: true
-    }
-  }).onOk(() => {
-    excluirAcao(id);
-  });
+  acaoSelecionada.value = id;
+  dialogExclusao.value = true;
+}
+
+function executarExclusao() {
+  if (acaoSelecionada.value) {
+    excluirAcao(acaoSelecionada.value);
+    acaoSelecionada.value = null;
+  }
 }
 async function excluirAcao(id){
     try {

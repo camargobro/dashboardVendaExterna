@@ -34,7 +34,7 @@ export default defineRouter(function (/* { store, ssrContext } */) {
       return { path: '/login', query: { redirect: to.fullPath } }
     }
 
-    if (to.meta.guestOnly && autenticado) return '/'
+    if (to.meta.guestOnly && autenticado) return '/app'
   })
 
   if (typeof window !== 'undefined') {

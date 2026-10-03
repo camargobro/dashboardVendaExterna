@@ -37,7 +37,13 @@
           </svg>
         </div>
 
-        <q-list class="pa-menu">
+        <q-list
+          class="pa-menu"
+          :style="{
+            '--pa-indicator-offset': `${Math.max(activeMenuIndex, 0) * 48}px`,
+            '--pa-indicator-opacity': activeMenuIndex < 0 ? 0 : 1
+          }"
+        >
           <q-item
             v-for="item in menu"
             :key="item.path"
@@ -53,6 +59,7 @@
 
         <div class="pa-conta">
           <div class="pa-conta-nome">{{ usuario?.nome || 'Conta conectada' }}</div>
+          <div v-if="usuario?.cnpj" class="pa-conta-cnpj">CNPJ: {{ usuario.cnpj }}</div>
           <q-item clickable class="pa-nav pa-sair" @click="sair">
             <q-item-section>
               <div class="pa-sair-conteudo">
@@ -67,14 +74,29 @@
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <router-view v-slot="{ Component, route }">
+        <Transition name="pa-route" mode="out-in">
+          <component :is="Component" :key="route.path" />
+        </Transition>
+      </router-view>
     </q-page-container>
+
+    <ConfirmDialog
+      v-model="dialogSair"
+      icon="logout"
+      title="Sair da conta"
+      message="Você realmente deseja sair?"
+      confirm-label="Sair"
+      intent="danger"
+      @confirm="confirmarSaida"
+    />
 
   </q-layout>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import ConfirmDialog from 'src/components/ConfirmDialog.vue'
 import { useQuasar } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
 import { clearSession, getUser } from 'src/services/auth'
@@ -84,13 +106,16 @@ const router = useRouter()
 const route = useRoute()
 
 const drawer = ref(false)
+const dialogSair = ref(false)
 const usuario = getUser()
 
 const menu = [
-  { label: 'Home', path: '/' },
-  { label: 'Registrar ação', path: '/criar-acao' },
-  { label: 'Histórico de ações', path: '/historico-acoes' }
+  { label: 'Home', path: '/app' },
+  { label: 'Registrar ação', path: '/app/criar-acao' },
+  { label: 'Histórico de ações', path: '/app/historico-acoes' },
+  { label: 'Pontos', path: '/app/pontos' }
 ]
+const activeMenuIndex = computed(() => menu.findIndex((item) => route.path === item.path))
 
 function go (path) {
   if (route.path !== path) {
@@ -106,6 +131,10 @@ function isActive (path) {
 }
 
 function sair () {
+  dialogSair.value = true
+}
+
+function confirmarSaida () {
   clearSession()
   router.replace('/login')
 }
@@ -150,9 +179,26 @@ function sair () {
 }
 
 .pa-menu {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.pa-menu::before {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 44px;
+  border-radius: 0 4px 4px 0;
+  background: var(--pa-orange);
+  content: '';
+  opacity: var(--pa-indicator-opacity);
+  pointer-events: none;
+  transform: translateY(var(--pa-indicator-offset));
+  transition: transform 280ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 180ms ease;
 }
 
 .pa-conta {
@@ -168,6 +214,12 @@ function sair () {
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.pa-conta-cnpj {
+  margin-top: 4px;
+  color: var(--pa-suave);
+  font-size: 0.75rem;
 }
 
 .pa-sair {
@@ -188,6 +240,7 @@ function sair () {
   border-radius: 8px;
   font-weight: 500;
   color: var(--pa-suave);
+  transition: background 180ms ease, color 180ms ease;
 }
 
 .pa-nav:hover {
@@ -201,14 +254,10 @@ function sair () {
   color: var(--pa-navy);
 }
 
-.pa-nav-ativo::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 10px;
-  bottom: 10px;
-  width: 4px;
-  border-radius: 0 4px 4px 0;
-  background: var(--pa-orange);
+@media (prefers-reduced-motion: reduce) {
+  .pa-menu::before,
+  .pa-nav {
+    transition: none;
+  }
 }
 </style>

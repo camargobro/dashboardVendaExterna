@@ -18,25 +18,26 @@ export async function buscarUsuarios(req, res) {
 
 export async function criarUsuario(req, res) {
     try {
-        const { nome, email, senha } = req.body;
+        const { nome, cnpj, email, senha } = req.body;
+        const cnpjNormalizado = String(cnpj || '').replace(/[^a-z0-9]/gi, '').toUpperCase();
 
-        const camposValidos = await verificaUsuario(nome, email, senha);
+        const camposValidos = await verificaUsuario(nome, cnpjNormalizado, email, senha);
         if (!camposValidos) {
             return res.status(400).json({ error: "Algum campo está faltando" });
         }
 
-        const duplicado = await verificaDuplicado({ nome, email });
+        const duplicado = await verificaDuplicado({ nome, email, cnpj: cnpjNormalizado });
         if (duplicado) {
-            return res.status(400).json({ error: "Usuário já existe, tente novamente com outros dados" })
+            return res.status(400).json({ error: "Nome, e-mail ou CNPJ já cadastrado" })
         }
 
         const senhaHash = await bcrypt.hash(senha, saltRounds)
-        const novoUsuario = await postUsuario({ nome, email, senha: senhaHash });
+        const novoUsuario = await postUsuario({ nome, cnpj: cnpjNormalizado, email, senha: senhaHash });
         if (!novoUsuario) {
             return res.status(400).json({ error: "Erro ao criar usuario" });
         }
 
-        const usuario = { id: novoUsuario._id, nome: novoUsuario.nome, email: novoUsuario.email };
+        const usuario = { id: novoUsuario._id, nome: novoUsuario.nome, cnpj: novoUsuario.cnpj, email: novoUsuario.email };
 
         return res.status(201).json({ message: "Usuário criado com sucesso", usuario });
     } catch (error) {
@@ -91,7 +92,7 @@ export async function login(req, res) {
             }
         );
 
-        const usuarioSeguro = { id: usuario._id, nome: usuario.nome, email: usuario.email };
+        const usuarioSeguro = { id: usuario._id, nome: usuario.nome, cnpj: usuario.cnpj, email: usuario.email };
 
         return res.status(200).json({
             message: "Login realizado com sucesso",

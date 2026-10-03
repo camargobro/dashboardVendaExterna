@@ -1,9 +1,22 @@
 import { Acoes } from './modelAcao.js';
 import { Pontos } from './modelPonto.js';
 
+async function getDadosEmpresa(empresaId) {
+    const [acoes, pontos] = await Promise.all([
+        Acoes.find({ empresaId }),
+        Pontos.find({ empresaId })
+    ]);
+    const pontosIds = new Set(pontos.map(ponto => String(ponto._id)));
+
+    return {
+        acoes: acoes.filter(acao => pontosIds.has(String(acao.pontoId))),
+        pontos
+    };
+}
+
 export async function getResumo(empresaId) {
     try {
-        const acoes = await Acoes.find({ empresaId });
+        const { acoes } = await getDadosEmpresa(empresaId);
 
         const totalAcoes = acoes.length;
         const totalVendas = acoes.reduce((acc, a) => acc + a.vendas, 0);
@@ -22,8 +35,7 @@ export async function getResumo(empresaId) {
 
 export async function getRanking(empresaId) {
     try {
-        const acoes = await Acoes.find({ empresaId });
-        const pontos = await Pontos.find({ empresaId });
+        const { acoes, pontos } = await getDadosEmpresa(empresaId);
 
         const agrupado = {};
 
@@ -65,6 +77,8 @@ export async function getRanking(empresaId) {
                 pontoId,
 
                 nome: ponto?.nome || 'Desconhecido',
+
+                telefone: ponto?.telefone || '',
 
                 endereco: ponto?.endereco || 'Endereço não informado',
 
